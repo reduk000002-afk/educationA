@@ -329,6 +329,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            margin-bottom: 24px;
         }
 
         .option {
@@ -346,6 +347,11 @@
             background: #252525;
         }
 
+        .option.selected {
+            background: #2a2a2a;
+            border: 1px solid #ffffff;
+        }
+
         .option input {
             cursor: pointer;
             width: 18px;
@@ -356,6 +362,29 @@
             cursor: pointer;
             flex: 1;
             font-size: 14px;
+        }
+
+        .confirm-btn {
+            width: 100%;
+            padding: 14px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .confirm-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .confirm-btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
         }
 
         .modal-buttons {
@@ -391,6 +420,12 @@
             background: #141414;
             border-radius: 16px;
             margin-top: 20px;
+        }
+
+        .question-progress {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 16px;
         }
 
         @media (max-width: 768px) {
@@ -470,7 +505,6 @@
                 <div class="timer" id="timer">40</div>
             </div>
             <div id="questionsContainer"></div>
-            <button class="modal-btn modal-btn-primary" id="submitTestBtn" style="margin-top: 20px;">Завершить тест</button>
         </div>
         <div id="testResultArea" style="display: none;">
             <div class="result-message">
@@ -492,6 +526,7 @@
     let userAnswers = [];
     let timerInterval = null;
     let timeLeft = 40;
+    let currentSelectedAnswer = null;
 
     // Вопросы теста
     const testQuestions = [
@@ -627,6 +662,7 @@
     function startTest() {
         userAnswers = [];
         currentQuestionIndex = 0;
+        currentSelectedAnswer = null;
         document.getElementById('testIntro').style.display = 'none';
         document.getElementById('testQuestionsArea').style.display = 'block';
         showQuestion();
@@ -639,24 +675,85 @@
         }
         
         resetTimer();
+        currentSelectedAnswer = null;
+        
         const q = testQuestions[currentQuestionIndex];
         const container = document.getElementById('questionsContainer');
         
         container.innerHTML = `
+            <div class="question-progress">Вопрос ${currentQuestionIndex + 1} из ${testQuestions.length}</div>
             <div class="question">
-                <div class="question-text">${currentQuestionIndex + 1}. ${q.text}</div>
-                <div class="options">
+                <div class="question-text">${q.text}</div>
+                <div class="options" id="optionsContainer">
                     ${q.options.map((opt, idx) => `
-                        <label class="option">
-                            <input type="radio" name="question" value="${idx}">
-                            <label>${opt}</label>
-                        </label>
+                        <div class="option" data-value="${idx}">
+                            <input type="radio" name="question" value="${idx}" id="opt_${idx}">
+                            <label for="opt_${idx}">${opt}</label>
+                        </div>
                     `).join('')}
                 </div>
+                <button class="confirm-btn" id="confirmAnswerBtn" disabled>Подтвердить ответ</button>
             </div>
         `;
         
+        // Добавляем обработчики для выбора ответа
+        document.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', () => {
+                const value = parseInt(option.dataset.value);
+                selectAnswer(value);
+            });
+        });
+        
         startTimer();
+    }
+
+    function selectAnswer(value) {
+        currentSelectedAnswer = value;
+        
+        // Визуальное выделение
+        document.querySelectorAll('.option').forEach(opt => {
+            opt.classList.remove('selected');
+            const radio = opt.querySelector('input');
+            radio.checked = false;
+        });
+        
+        const selectedOpt = document.querySelector(`.option[data-value="${value}"]`);
+        if (selectedOpt) {
+            selectedOpt.classList.add('selected');
+            const radio = selectedOpt.querySelector('input');
+            radio.checked = true;
+        }
+        
+        // Активируем кнопку подтверждения
+        const confirmBtn = document.getElementById('confirmAnswerBtn');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+        }
+    }
+
+    function confirmAndNext() {
+        if (currentSelectedAnswer === null) return;
+        
+        // Сохраняем ответ
+        const q = testQuestions[currentQuestionIndex];
+        const isCorrect = (currentSelectedAnswer === q.correct);
+        
+        userAnswers.push({
+            question: q.text,
+            user_answer: q.options[currentSelectedAnswer],
+            is_correct: isCorrect,
+            correct_answer: q.options[q.correct]
+        });
+        
+        // Переходим к следующему вопросу
+        currentQuestionIndex++;
+        currentSelectedAnswer = null;
+        
+        if (currentQuestionIndex < testQuestions.length) {
+            showQuestion();
+        } else {
+            finishTest();
+        }
     }
 
     function resetTimer() {
@@ -674,30 +771,33 @@
             
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                saveCurrentAnswer();
-                currentQuestionIndex++;
-                showQuestion();
+                // Автоматически сохраняем текущий ответ (если выбран) или пропускаем
+                if (currentSelectedAnswer !== null) {
+                    confirmAndNext();
+                } else {
+                    // Пропускаем вопрос без ответа
+                    const q = testQuestions[currentQuestionIndex];
+                    userAnswers.push({
+                        question: q.text,
+                        user_answer: "Время вышло, ответ не выбран",
+                        is_correct: false,
+                        correct_answer: q.options[q.correct]
+                    });
+                    currentQuestionIndex++;
+                    currentSelectedAnswer = null;
+                    
+                    if (currentQuestionIndex < testQuestions.length) {
+                        showQuestion();
+                    } else {
+                        finishTest();
+                    }
+                }
             }
         }, 1000);
     }
 
-    function saveCurrentAnswer() {
-        const selected = document.querySelector('input[name="question"]:checked');
-        const q = testQuestions[currentQuestionIndex];
-        const userAnswer = selected ? parseInt(selected.value) : -1;
-        const isCorrect = (userAnswer === q.correct);
-        
-        userAnswers.push({
-            question: q.text,
-            user_answer: userAnswer === -1 ? "Нет ответа" : q.options[userAnswer],
-            is_correct: isCorrect,
-            correct_answer: q.options[q.correct]
-        });
-    }
-
     async function finishTest() {
         clearInterval(timerInterval);
-        saveCurrentAnswer();
         
         const correctCount = userAnswers.filter(a => a.is_correct).length;
         
@@ -800,6 +900,7 @@
         }
     }
 
+    // Обработчики событий
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const login = document.getElementById('loginInput').value;
@@ -837,9 +938,15 @@
         document.getElementById('testModal').style.display = 'none';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
-    document.getElementById('submitTestBtn').addEventListener('click', finishTest);
     document.getElementById('closeTestModalBtn').addEventListener('click', () => {
         document.getElementById('testModal').style.display = 'none';
+    });
+    
+    // Делегирование события для кнопки подтверждения (так как она создается динамически)
+    document.getElementById('questionsContainer').addEventListener('click', (e) => {
+        if (e.target.id === 'confirmAnswerBtn' || e.target.closest('#confirmAnswerBtn')) {
+            confirmAndNext();
+        }
     });
     
     document.getElementById('loginPage').style.display = 'flex';
