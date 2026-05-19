@@ -264,11 +264,11 @@
         <form id="loginForm">
             <div class="form-group">
                 <label>Логин</label>
-                <input type="text" id="login" placeholder="Введите логин" autocomplete="off">
+                <input type="text" id="loginInput" placeholder="Введите логин" autocomplete="off">
             </div>
             <div class="form-group">
                 <label>Пароль</label>
-                <input type="password" id="password" placeholder="Введите пароль">
+                <input type="password" id="passwordInput" placeholder="Введите пароль">
             </div>
             <button type="submit" class="login-btn">Войти</button>
             <div id="loginError" class="error-message" style="display: none;"></div>
@@ -317,7 +317,7 @@
         ]
     };
 
-    async function checkLogin(login, password) {
+    async function checkUserLogin(login, password) {
         try {
             const response = await fetch(`${SUPABASE_URL}/rest/v1/users?login=eq.${login}&select=*`, {
                 method: 'GET',
@@ -348,7 +348,7 @@
         const contentArea = document.getElementById('contentArea');
         
         if (!videos || videos.length === 0) {
-            contentArea.innerHTML = '<div class="coming-soon" style="text-align:center;padding:60px;background:#0a0a0a;border-radius:16px;"><h2>📚 Нет доступных видео</h2><p>Видео для этого уровня еще не добавлены</p></div>';
+            contentArea.innerHTML = '<div style="text-align:center;padding:60px;background:#0a0a0a;border-radius:16px;"><h2>📚 Нет доступных видео</h2><p>Видео для этого уровня еще не добавлены</p></div>';
             return;
         }
 
@@ -382,8 +382,8 @@
         }
     }
 
-    async function login(login, password) {
-        const result = await checkLogin(login, password);
+    async function performLogin(login, password) {
+        const result = await checkUserLogin(login, password);
         
         if (result.success) {
             currentUser = result.user;
@@ -449,11 +449,12 @@
         }
     }
 
+    // Обработчики событий
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const login = document.getElementById('login').value;
-        const password = document.getElementById('password').value;
-        await login(login, password);
+        const login = document.getElementById('loginInput').value;
+        const password = document.getElementById('passwordInput').value;
+        await performLogin(login, password);
     });
     
     document.getElementById('mainPageBtn').addEventListener('click', () => {
@@ -476,11 +477,12 @@
         localStorage.removeItem('userLogin');
         document.getElementById('loginPage').style.display = 'flex';
         document.getElementById('mainPage').style.display = 'none';
-        document.getElementById('login').value = '';
-        document.getElementById('password').value = '';
+        document.getElementById('loginInput').value = '';
+        document.getElementById('passwordInput').value = '';
         document.getElementById('loginError').style.display = 'none';
     });
     
+    // Запуск
     document.getElementById('loginPage').style.display = 'flex';
     document.getElementById('mainPage').style.display = 'none';
     
