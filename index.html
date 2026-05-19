@@ -580,7 +580,6 @@
     let timeLeft = 40;
     let currentSelectedAnswer = null;
     let currentTestLevel = 1;
-    let currentVideoElement = null;
 
     // Вопросы теста 1 уровня
     const level1Questions = [
@@ -647,23 +646,14 @@
         { id: 4, level: 2, file: 'predloga.mp4', title: 'Урок 4', subtitle: 'Предлога' }
     ];
 
-    // Функция для управления видео (останавливает все кроме текущего)
     function setupVideoHandlers(videoElement) {
         videoElement.addEventListener('play', () => {
-            // Останавливаем все другие видео
             document.querySelectorAll('video').forEach(video => {
                 if (video !== videoElement && !video.paused) {
                     video.pause();
                 }
             });
         });
-    }
-
-    // Функция для перемотки видео
-    function seekVideo(videoElement, seconds) {
-        if (videoElement) {
-            videoElement.currentTime += seconds;
-        }
     }
 
     async function checkUserLogin(login, password) {
@@ -799,12 +789,10 @@
             </div>
         `;
         
-        // Назначаем обработчики для видео
         document.querySelectorAll('video').forEach(video => {
             setupVideoHandlers(video);
         });
         
-        // Назначаем обработчики для кнопок перемотки
         document.querySelectorAll('.seek-back-10').forEach(btn => {
             btn.addEventListener('click', () => {
                 const videoId = btn.dataset.videoId;
@@ -844,7 +832,6 @@
 
     function openTestModal(level) {
         currentTestLevel = level;
-        const questions = getTestQuestions(level);
         const testTitle = level === 1 ? '📝 Тест: Сфера инвестиций и фильтрация трафика' : '📝 Тест: Вбросы и Предлога';
         const testDesc = level === 1 
             ? 'В тесте будет 5 вопросов по темам: Сфера инвестиций и Фильтрация трафика'
@@ -997,6 +984,7 @@
         const questions = getTestQuestions(currentTestLevel);
         const correctCount = userAnswers.filter(a => a.is_correct).length;
         
+        // Сохраняем в Supabase
         try {
             const result = {
                 user_id: currentUser.id,
@@ -1024,6 +1012,30 @@
             
         } catch (error) {
             console.error('Ошибка сохранения:', error);
+        }
+        
+        // Отправка в Telegram через Python сервер
+        try {
+            const response = await fetch('http://localhost:3000/test-result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userName: currentUser.full_name,
+                    userLogin: currentUser.login,
+                    score: correctCount,
+                    total: questions.length,
+                    level: currentTestLevel,
+                    answers: userAnswers
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                console.log('✅ Уведомление отправлено в Telegram');
+            } else {
+                console.log('❌ Ошибка отправки:', data.message);
+            }
+        } catch (e) {
+            console.error('❌ Ошибка соединения с сервером Telegram:', e);
         }
         
         const nextMessage = currentTestLevel === 1 
