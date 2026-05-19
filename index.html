@@ -1,201 +1,1294 @@
-// Функция renderLevel3 - заменяем на эту
-function renderLevel3(showTestButton = false, testPassed = false) {
-    const contentArea = document.getElementById('contentArea');
-    const savedNotes = currentUser.level3_notes || '';
-    const notesArray = savedNotes ? savedNotes.split('|') : ['', '', '', '', '', '', '', '', '', ''];
-    
-    contentArea.innerHTML = `
-        <div class="notes-container">
-            <h2>📝 Анализ диалогов</h2>
-            <p>Прочитайте диалоги и выпишите 10 фишек, моментов которые вам запомнились и которые вы будете использовать в своих диалогах</p>
-            <div class="notes-list" id="notesList">
-                ${[1,2,3,4,5,6,7,8,9,10].map(i => `
-                    <div class="note-item">
-                        <div class="note-number">${i}</div>
-                        <input type="text" id="note${i}" placeholder="" value="${escapeHtml(notesArray[i-1] || '')}">
-                    </div>
-                `).join('')}
-            </div>
-            <button class="submit-notes-btn" id="submitNotesBtn">Сохранить и подтвердить</button>
-        </div>
-        ${showTestButton && !testPassed ? `
-            <div class="test-btn-container">
-                <button class="test-btn" id="openFinalTestBtn">📝 Пройти финальный тест</button>
-                <p style="text-align: center; margin-top: 12px; color: #888; font-size: 13px;">⚠️ Рекомендуется повторить пройденный материал</p>
-            </div>
-        ` : (testPassed ? `
-            <div class="test-btn-container">
-                <button class="test-btn disabled" disabled style="background:#333;color:#666;">✅ Финальный тест пройден</button>
-            </div>
-        ` : '')}
-    `;
-    
-    const submitBtn = document.getElementById('submitNotesBtn');
-    if (submitBtn) {
-        submitBtn.addEventListener('click', async () => {
-            // Проверяем заполнены ли все поля
-            let allFilled = true;
-            const notes = [];
-            for (let i = 1; i <= 10; i++) {
-                const input = document.getElementById(`note${i}`);
-                const value = input.value.trim();
-                notes.push(value);
-                if (!value) allFilled = false;
-            }
-            
-            if (!allFilled) {
-                // Создаем кастомное модальное окно вместо alert
-                showCustomModal('⚠️ Внимание', 'Пожалуйста, заполните все 10 пунктов перед сохранением.');
-                return;
-            }
-            
-            // Создаем кастомное окно подтверждения
-            showConfirmModal(
-                'Подтверждение',
-                'Вы уверены, что хотите сохранить заметки? После сохранения изменить их будет нельзя.',
-                async () => {
-                    const notesString = notes.join('|');
-                    await updateLevel3Notes(notesString);
-                    
-                    // Показываем успех и скрываем поле ввода
-                    showCustomModal('✅ Успешно', 'Заметки сохранены! Теперь доступен финальный тест.', () => {
-                        renderLevel3(true, false);
-                    });
-                }
-            );
-        });
-    }
-    
-    const finalTestBtn = document.getElementById('openFinalTestBtn');
-    if (finalTestBtn) {
-        finalTestBtn.addEventListener('click', () => openTestModal(3));
-    }
-}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Обучение | Инвестиции</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-// Функция для кастомного модального окна
-function showCustomModal(title, message, onClose = null) {
-    // Удаляем существующее модальное окно если есть
-    const existingModal = document.getElementById('customAlertModal');
-    if (existingModal) existingModal.remove();
-    
-    const modalHtml = `
-        <div id="customAlertModal" style="
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000000;
+        }
+
+        .login-box {
+            background: #0a0a0a;
+            padding: 48px 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 440px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .login-box h1 {
+            font-size: 28px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .login-box .subtitle {
+            text-align: center;
+            color: #6b6b6b;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #d0d0d0;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            font-size: 15px;
+            color: #ffffff;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ffffff;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #000000;
+            cursor: pointer;
+        }
+
+        .login-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .error-message {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 16px;
+            text-align: center;
+            color: #ff4444;
+            font-size: 14px;
+        }
+
+        .main-container {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #0a0a0a;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 16px 32px;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .profile-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            padding: 8px 20px;
+            border-radius: 20px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+
+        .nav-btn:hover {
+            background: #1a1a1a;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #333, #1a1a1a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .profile-info h3 {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .profile-info p {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .level-badge {
+            background: #1a1a1a;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            border: 1px solid #333;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .logout-btn:hover {
+            background: #1a1a1a;
+        }
+
+        .notification {
+            background: #f5a62320;
+            border: 1px solid #f5a623;
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification-icon {
+            font-size: 20px;
+        }
+
+        .notification-text {
+            color: #f5a623;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .videos-section h1 {
+            font-size: 24px;
+            margin-bottom: 24px;
+        }
+
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 32px;
+        }
+
+        .video-card {
+            background: #0a0a0a;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            display: block;
+        }
+
+        .video-title {
+            padding: 16px 20px 4px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .video-subtitle {
+            padding: 0 20px 20px;
+            font-size: 14px;
+            color: #888888;
+        }
+
+        .test-btn-container {
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #2a2a2a;
+        }
+
+        .test-btn {
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .test-btn.disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .test-btn:hover:not(.disabled) {
+            background: #e0e0e0;
+            transform: translateY(-1px);
+        }
+
+        .modal {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 10000;
-            display: flex;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
             align-items: center;
             justify-content: center;
-        ">
-            <div style="
-                background: #0a0a0a;
-                border: 1px solid #2a2a2a;
-                border-radius: 24px;
-                padding: 32px;
-                max-width: 400px;
-                width: 90%;
-                text-align: center;
-            ">
-                <h3 style="margin-bottom: 16px;">${title}</h3>
-                <p style="margin-bottom: 24px; color: #aaa;">${message}</p>
-                <button id="alertOkBtn" style="
-                    background: #ffffff;
-                    color: #000000;
-                    border: none;
-                    padding: 12px 32px;
-                    border-radius: 40px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    cursor: pointer;
-                ">OK</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    document.getElementById('alertOkBtn').addEventListener('click', () => {
-        document.getElementById('customAlertModal').remove();
-        if (onClose) onClose();
-    });
-}
+        }
 
-// Функция для кастомного окна подтверждения
-function showConfirmModal(title, message, onConfirm) {
-    const existingModal = document.getElementById('customConfirmModal');
-    if (existingModal) existingModal.remove();
-    
-    const modalHtml = `
-        <div id="customConfirmModal" style="
-            position: fixed;
-            top: 0;
-            left: 0;
+        .modal-content {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 24px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .modal-header h3 {
+            font-size: 24px;
+        }
+
+        .timer {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ff4444;
+            font-family: monospace;
+        }
+
+        .question {
+            margin-bottom: 32px;
+            padding: 20px;
+            background: #141414;
+            border-radius: 16px;
+        }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option:hover {
+            background: #252525;
+        }
+
+        .option.selected {
+            background: #2a2a2a;
+            border: 1px solid #ffffff;
+        }
+
+        .option input {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .option label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .confirm-btn {
             width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 10000;
+            padding: 14px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .confirm-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .confirm-btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .modal-btn-primary {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .modal-btn-secondary {
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            color: #ffffff;
+        }
+
+        .result-message {
+            text-align: center;
+            padding: 20px;
+            background: #141414;
+            border-radius: 16px;
+            margin-top: 20px;
+        }
+
+        .question-progress {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 16px;
+        }
+
+        .notes-container {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+
+        .notes-container h2 {
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+
+        .notes-container p {
+            color: #aaa;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .note-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .note-number {
+            width: 40px;
+            height: 40px;
+            background: #1a1a1a;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-        ">
-            <div style="
-                background: #0a0a0a;
-                border: 1px solid #2a2a2a;
-                border-radius: 24px;
-                padding: 32px;
-                max-width: 400px;
-                width: 90%;
-                text-align: center;
-            ">
-                <h3 style="margin-bottom: 16px;">${title}</h3>
-                <p style="margin-bottom: 24px; color: #aaa;">${message}</p>
-                <div style="display: flex; gap: 12px;">
-                    <button id="confirmCancelBtn" style="
-                        flex: 1;
-                        background: transparent;
-                        border: 1px solid #2a2a2a;
-                        color: #ffffff;
-                        padding: 12px;
-                        border-radius: 40px;
-                        font-size: 14px;
-                        font-weight: 600;
-                        cursor: pointer;
-                    ">Отмена</button>
-                    <button id="confirmOkBtn" style="
-                        flex: 1;
-                        background: #ffffff;
-                        color: #000000;
-                        border: none;
-                        padding: 12px;
-                        border-radius: 40px;
-                        font-size: 14px;
-                        font-weight: 600;
-                        cursor: pointer;
-                    ">Подтвердить</button>
+            font-weight: 700;
+            color: #888;
+        }
+
+        .note-item input {
+            flex: 1;
+            padding: 12px 16px;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .note-item input:focus {
+            outline: none;
+            border-color: #ffffff;
+        }
+
+        .submit-notes-btn {
+            width: 100%;
+            padding: 14px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+
+        .submit-notes-btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .videos-grid {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                padding: 12px 16px;
+            }
+            .timer {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginPage" class="login-container">
+    <div class="login-box">
+        <h1>Корпоративное обучение</h1>
+        <p class="subtitle">Войдите с использованием своих учетных данных</p>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Логин</label>
+                <input type="text" id="loginInput" placeholder="Введите логин" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="passwordInput" placeholder="Введите пароль">
+            </div>
+            <button type="submit" class="login-btn">Войти</button>
+            <div id="loginError" class="error-message" style="display: none;"></div>
+        </form>
+    </div>
+</div>
+
+<div id="mainPage" class="main-container">
+    <div class="header">
+        <div class="header-content">
+            <div class="profile-left">
+                <div class="avatar">👤</div>
+                <div class="profile-info">
+                    <h3 id="userName">Загрузка...</h3>
+                    <p id="userTelegram">@загрузка</p>
+                </div>
+                <div class="level-badge" id="levelBadge">Уровень 1</div>
+                <div class="nav-buttons">
+                    <button class="nav-btn active" id="mainPageBtn">Главная</button>
+                    <button class="nav-btn" id="materialsBtn">Материалы</button>
                 </div>
             </div>
+            <button class="logout-btn" id="logoutBtn">Выйти</button>
         </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    document.getElementById('confirmCancelBtn').addEventListener('click', () => {
-        document.getElementById('customConfirmModal').remove();
-    });
-    
-    document.getElementById('confirmOkBtn').addEventListener('click', () => {
-        document.getElementById('customConfirmModal').remove();
-        onConfirm();
-    });
-}
+    </div>
 
-// Функция для экранирования HTML
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+    <div class="content" id="contentArea"></div>
+</div>
+
+<div id="testModal" class="modal">
+    <div class="modal-content">
+        <div id="testIntro" style="text-align: center;">
+            <h3 id="testTitle">📝 Тест по материалам</h3>
+            <p id="testDescription" style="margin: 20px 0; color: #aaa;"></p>
+            <p style="margin: 30px 0; color: #ff4444;">⏱ На каждый ответ дается 40 секунд</p>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" id="reviewMaterialBtn">📖 Повторить материал</button>
+                <button class="modal-btn modal-btn-primary" id="startTestBtn">▶ Начать тест</button>
+            </div>
+        </div>
+        <div id="testQuestionsArea" style="display: none;">
+            <div class="modal-header">
+                <h3>Тест</h3>
+                <div class="timer" id="timer">40</div>
+            </div>
+            <div id="questionsContainer"></div>
+        </div>
+        <div id="testResultArea" style="display: none;">
+            <div class="result-message">
+                <h3>✅ Результаты сохранены</h3>
+                <p id="nextStepMessage" style="margin-top: 20px;"></p>
+            </div>
+            <button class="modal-btn modal-btn-secondary" id="closeTestModalBtn" style="margin-top: 20px;">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://hmlcwfrbymdnofhunibd.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_25VHjp6VP8_OcNsPuBBpqg_0hua7oPG';
+    
+    let currentUser = null;
+    let currentPage = 'main';
+    let currentQuestionIndex = 0;
+    let userAnswers = [];
+    let timerInterval = null;
+    let timeLeft = 40;
+    let currentSelectedAnswer = null;
+    let currentTestLevel = 1;
+
+    const level1Questions = [
+        {
+            text: "Пассивный доход это",
+            options: ["Акции, крипта", "Бизнес", "Это способ заработка, который не требует от вас участия и ежедневной активности"],
+            correct: 2
+        },
+        {
+            text: "На каком рынке торгуют контрактами на нефть, серебро, никель",
+            options: ["Фондовый", "Товарно сырьевой", "Криптовалютный", "Валютный"],
+            correct: 1
+        },
+        {
+            text: "Какой минимальный возраст клиента которого мы можем взять в работу",
+            options: ["30 лет", "26 лет", "23 года"],
+            correct: 1
+        },
+        {
+            text: "Можно ли взять в работу клиента которому 42 года",
+            options: ["Да, при условии что он разбирается в телефоне и у него есть финансовые цели в жизни", "Нет"],
+            correct: 0
+        },
+        {
+            text: "Обязательно ли узнавать у клиента сколько он сидит на сайте если он уже сказал что ему ничего не предлагали?",
+            options: ["Да", "Нет"],
+            correct: 0
+        }
+    ];
+
+    const level2Questions = [
+        {
+            text: "Обязательно ли делать клиенту индикаторный вброс если в базе он чистый?",
+            options: ["Да", "Нет"],
+            correct: 0
+        },
+        {
+            text: "Цель индикаторного вброса",
+            options: ["Вызвать у клиента интерес к заработку", "Увидеть реакцию клиента на инвестиции"],
+            correct: 1
+        },
+        {
+            text: "Сколько должно быть вбросов за диалог",
+            options: ["1", "2-3", "5+"],
+            correct: 1
+        },
+        {
+            text: "Можно ли взять клиента у которого уже есть 2 открытых кредита которые он оплачивает без просрочек",
+            options: ["Да", "Нет"],
+            correct: 0
+        },
+        {
+            text: "Вы начали вброс, получили ответ от клиента и не знаете как ответить.",
+            options: ["Аккуратно закончите вброс что бы клиент не сорвался", "Загуглите в интернете ответ на его вопрос", "Проконсультируетесь с тимлидером"],
+            correct: 2
+        }
+    ];
+
+    const level3Questions = [
+        { text: "Пассивный доход это", options: ["Акции, крипта", "Бизнес", "Это способ заработка, который не требует от вас участия и ежедневной активности"], correct: 2 },
+        { text: "Потребность это", options: ["Желание клиента инвестировать вместе с аналитиком", "Цели, планы на какой-то период жизни, желание что-то сделать - добиться", "Зависимость человека от чего-то"], correct: 1 },
+        { text: "Прогрев это", options: ["Предложение начать инвестировать вместе с аналитиком", "Диалог о сфере, развитии в ходе которого мы меняем мышление человека", "Информация про сферу инвестиций/ аналитика"], correct: 1 },
+        { text: "Вброс это", options: ["Предложение начать инвестировать вместе с аналитиком", "Информация про сферу инвестиций/ аналитика", "Диалог о сфере, развитии в ходе которого мы меняем мышление человека"], correct: 1 },
+        { text: "Мы обязательно должны узнать про клиента", options: ["Имя, номер, рост, женат/нет", "Имя, возраст, откуда он, работа, хобби, опыт и отношение к сфере, недвижимость/ автомобиль (по возможности)", "В каких странах был, имя, Инстаграм, ВК"], correct: 1 },
+        { text: "Возрастной порог клиентов", options: ["26+", "18+", "25+"], correct: 0 },
+        { text: "Мы не берём в работу", options: ["Слесарь, пекарь, инженер", "Айтишник, трейдер, банковский сотрудник", "Женщин"], correct: 1 },
+        { text: "Для того чтобы начать работу с Александром необходимо иметь", options: ["Инвест портфель на Руской бирже", "Миллион рублей", "Время, желание и минимальный капитал"], correct: 2 },
+        { text: "Первый вброс мы делаем на", options: ["3 день общения", "1 день общения", "5 день общения"], correct: 1 },
+        { text: "Мы стараемся оградить клиентов от", options: ["Знаний про инвестиции", "Сайтов знакомств", "Семьи"], correct: 1 },
+        { text: "Если клиент не открыт к диалогу , не рассказывает о себе, сухо общается", options: ["Пытаемся узнать почему так, если ничего не меняется - кидаем в архив", "Навязываемся, упрашиваем продолжить общение что бы не потерять клиента", "Общаемся с ним так как он хочет"], correct: 0 },
+        { text: "Можно ли передать клиента с хорошей зарплатой, но просрочками по кредитам?", options: ["Да", "Нет"], correct: 1 },
+        { text: "AurumTrade это", options: ["Темка - мутка", "Ворк Тима где обманывают лохов и мамонтов", "Онлайн офис где нужно уделять работе от 7 часов в день и можно хорошо заработать"], correct: 2 }
+    ];
+
+    const allVideos = [
+        { id: 1, level: 1, file: 'sfeeeeeeeera.mp4', title: 'Урок 1', subtitle: 'Сфера инвестиций' },
+        { id: 2, level: 1, file: 'filtrasia.mp4', title: 'Урок 2', subtitle: 'Фильтрация трафика' },
+        { id: 3, level: 2, file: 'Vbros.mp4', title: 'Урок 3', subtitle: 'Вброс' },
+        { id: 4, level: 2, file: 'predloga.mp4', title: 'Урок 4', subtitle: 'Предлога' }
+    ];
+
+    function setupVideoHandlers(videoElement) {
+        videoElement.addEventListener('play', () => {
+            document.querySelectorAll('video').forEach(video => {
+                if (video !== videoElement && !video.paused) {
+                    video.pause();
+                }
+            });
+        });
+    }
+
+    async function checkUserLogin(login, password) {
+        try {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/users?login=eq.${login}&select=*`, {
+                method: 'GET',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const users = await response.json();
+                if (users.length > 0 && users[0].password === password) {
+                    return { success: true, user: users[0] };
+                }
+            }
+            return { success: false, error: 'Неверный логин или пароль' };
+        } catch (error) {
+            return { success: false, error: 'Ошибка подключения к базе данных' };
+        }
+    }
+
+    async function updateTestPassed(level) {
+        try {
+            const updateData = level === 1 ? { level1_test_passed: true } : { level2_test_passed: true };
+            await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${currentUser.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            });
+            if (level === 1) {
+                currentUser.level1_test_passed = true;
+            } else if (level === 2) {
+                currentUser.level2_test_passed = true;
+            }
+        } catch (error) {
+            console.error('Ошибка обновления:', error);
+        }
+    }
+
+    async function updateLevel3Notes(notes) {
+        try {
+            await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${currentUser.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ level3_notes: notes })
+            });
+            currentUser.level3_notes = notes;
+        } catch (error) {
+            console.error('Ошибка сохранения заметок:', error);
+        }
+    }
+
+    async function updateLevel3TestPassed() {
+        try {
+            await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${currentUser.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ level3_test_passed: true })
+            });
+            currentUser.level3_test_passed = true;
+        } catch (error) {
+            console.error('Ошибка обновления:', error);
+        }
+    }
+
+    function getMainPageContent() {
+        if (currentUser.current_level === 1) {
+            return { type: 'videos', videos: allVideos.filter(v => v.level === 1), testLevel: 1, testPassed: currentUser.level1_test_passed };
+        } else if (currentUser.current_level === 2) {
+            return { type: 'videos', videos: allVideos.filter(v => v.level === 2), testLevel: 2, testPassed: currentUser.level2_test_passed };
+        } else if (currentUser.current_level === 3) {
+            return { type: 'level3', testPassed: currentUser.level3_test_passed };
+        }
+        return { type: 'empty' };
+    }
+
+    function getMaterialsContent() {
+        if (currentUser.current_level === 1) {
+            return { type: 'videos', videos: allVideos.filter(v => v.level === 1) };
+        } else if (currentUser.current_level === 2) {
+            return { type: 'videos', videos: allVideos };
+        } else if (currentUser.current_level === 3) {
+            return { type: 'videos', videos: allVideos };
+        }
+        return { type: 'empty' };
+    }
+
+    function renderLevel3(showTestButton = false, testPassed = false) {
+        const contentArea = document.getElementById('contentArea');
+        const savedNotes = currentUser.level3_notes || '';
+        const notesArray = savedNotes ? savedNotes.split('|') : ['', '', '', '', '', '', '', '', '', ''];
+        
+        // Если заметки уже сохранены - показываем только кнопку теста
+        if (savedNotes && savedNotes.split('|').some(n => n.trim())) {
+            contentArea.innerHTML = `
+                <div class="test-btn-container">
+                    <button class="test-btn" id="openFinalTestBtn">📝 Пройти финальный тест</button>
+                    <p style="text-align: center; margin-top: 12px; color: #888; font-size: 13px;">⚠️ Рекомендуется повторить пройденный материал</p>
+                </div>
+            `;
+            const finalTestBtn = document.getElementById('openFinalTestBtn');
+            if (finalTestBtn) {
+                finalTestBtn.addEventListener('click', () => openTestModal(3));
+            }
+            return;
+        }
+        
+        // Показываем форму для заполнения заметок
+        contentArea.innerHTML = `
+            <div class="notes-container">
+                <h2>📝 Анализ диалогов</h2>
+                <p>Прочитайте диалоги и выпишите 10 фишек, моментов которые вам запомнились и которые вы будете использовать в своих диалогах</p>
+                <div class="notes-list" id="notesList">
+                    ${[1,2,3,4,5,6,7,8,9,10].map(i => `
+                        <div class="note-item">
+                            <div class="note-number">${i}</div>
+                            <input type="text" id="note${i}" placeholder="" value="${(notesArray[i-1] || '').replace(/"/g, '&quot;')}">
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="submit-notes-btn" id="submitNotesBtn">Сохранить и подтвердить</button>
+            </div>
+        `;
+        
+        const submitBtn = document.getElementById('submitNotesBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', async () => {
+                // Проверяем заполнены ли все поля
+                let allFilled = true;
+                const notes = [];
+                for (let i = 1; i <= 10; i++) {
+                    const input = document.getElementById(`note${i}`);
+                    const value = input.value.trim();
+                    notes.push(value);
+                    if (!value) allFilled = false;
+                }
+                
+                if (!allFilled) {
+                    alert('Пожалуйста, заполните все 10 пунктов перед сохранением.');
+                    return;
+                }
+                
+                if (confirm('Вы уверены, что хотите сохранить заметки? После сохранения изменить их будет нельзя.')) {
+                    const notesString = notes.join('|');
+                    await updateLevel3Notes(notesString);
+                    alert('Заметки сохранены! Теперь доступен финальный тест.');
+                    renderLevel3(true, false);
+                }
+            });
+        }
+    }
+
+    function renderVideos(videos, testLevel = null, testPassed = false) {
+        const contentArea = document.getElementById('contentArea');
+        
+        if (!videos || videos.length === 0) {
+            contentArea.innerHTML = '<div style="text-align:center;padding:60px;background:#0a0a0a;border-radius:16px;"><h2>📚 Нет доступных видео</h2><p>Видео для этого уровня еще не добавлены</p></div>';
+            return;
+        }
+
+        let notificationText = '';
+        if (currentUser.current_level === 1 && currentUser.level1_test_passed) {
+            notificationText = 'Первый этап пройден! Для перехода на второй этап обратитесь к тимлидеру.';
+        } else if (currentUser.current_level === 2 && currentUser.level2_test_passed) {
+            notificationText = 'Второй этап пройден! Для перехода на третий этап обратитесь к тимлидеру.';
+        }
+
+        contentArea.innerHTML = `
+            ${notificationText ? `
+                <div class="notification">
+                    <div class="notification-icon">⚠️</div>
+                    <div class="notification-text">${notificationText}</div>
+                </div>
+            ` : ''}
+            <div class="videos-section">
+                <h1>📹 Обучающие видео</h1>
+                <div class="videos-grid">
+                    ${videos.map(video => `
+                        <div class="video-card">
+                            <video controls preload="metadata">
+                                <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/${video.file}" type="video/mp4">
+                            </video>
+                            <div class="video-title">${video.title}</div>
+                            <div class="video-subtitle">${video.subtitle}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${testLevel && !testPassed ? `
+                    <div class="test-btn-container">
+                        <button class="test-btn" id="openTestBtn">📝 Пройти тест</button>
+                    </div>
+                ` : (testLevel && testPassed ? `
+                    <div class="test-btn-container">
+                        <button class="test-btn disabled" disabled style="background:#333;color:#666;">✅ Тест пройден</button>
+                    </div>
+                ` : '')}
+            </div>
+        `;
+        
+        document.querySelectorAll('video').forEach(video => {
+            setupVideoHandlers(video);
+        });
+        
+        if (testLevel && !testPassed) {
+            document.getElementById('openTestBtn')?.addEventListener('click', () => openTestModal(testLevel));
+        }
+    }
+
+    function updateContent() {
+        if (!currentUser) return;
+        
+        if (currentPage === 'main') {
+            const content = getMainPageContent();
+            if (content.type === 'videos') {
+                renderVideos(content.videos, content.testLevel, content.testPassed);
+            } else if (content.type === 'level3') {
+                renderLevel3(true, content.testPassed);
+            }
+        } else if (currentPage === 'materials') {
+            const content = getMaterialsContent();
+            if (content.type === 'videos') {
+                renderVideos(content.videos);
+            }
+        }
+    }
+
+    function openTestModal(level) {
+        currentTestLevel = level;
+        let testTitle, testDesc;
+        
+        if (level === 1) {
+            testTitle = '📝 Тест: Сфера инвестиций и фильтрация трафика';
+            testDesc = 'В тесте будет 5 вопросов по темам: Сфера инвестиций и Фильтрация трафика';
+        } else if (level === 2) {
+            testTitle = '📝 Тест: Вбросы и Предлога';
+            testDesc = 'В тесте будет 5 вопросов по темам: Вбросы и Предлога';
+        } else {
+            testTitle = '📝 Финальный тест';
+            testDesc = 'В тесте будет 13 вопросов по всем темам обучения';
+        }
+        
+        document.getElementById('testTitle').textContent = testTitle;
+        document.getElementById('testDescription').textContent = testDesc;
+        document.getElementById('testIntro').style.display = 'block';
+        document.getElementById('testQuestionsArea').style.display = 'none';
+        document.getElementById('testResultArea').style.display = 'none';
+        document.getElementById('testModal').style.display = 'flex';
+    }
+
+    function startTest() {
+        userAnswers = [];
+        currentQuestionIndex = 0;
+        currentSelectedAnswer = null;
+        document.getElementById('testIntro').style.display = 'none';
+        document.getElementById('testQuestionsArea').style.display = 'block';
+        showQuestion();
+    }
+
+    function getTestQuestions(level) {
+        if (level === 1) return level1Questions;
+        if (level === 2) return level2Questions;
+        return level3Questions;
+    }
+
+    function showQuestion() {
+        const questions = getTestQuestions(currentTestLevel);
+        if (currentQuestionIndex >= questions.length) {
+            finishTest();
+            return;
+        }
+        
+        resetTimer();
+        currentSelectedAnswer = null;
+        
+        const q = questions[currentQuestionIndex];
+        const container = document.getElementById('questionsContainer');
+        
+        container.innerHTML = `
+            <div class="question-progress">Вопрос ${currentQuestionIndex + 1} из ${questions.length}</div>
+            <div class="question">
+                <div class="question-text">${q.text}</div>
+                <div class="options" id="optionsContainer">
+                    ${q.options.map((opt, idx) => `
+                        <div class="option" data-value="${idx}">
+                            <input type="radio" name="question" value="${idx}" id="opt_${idx}">
+                            <label for="opt_${idx}">${opt}</label>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="confirm-btn" id="confirmAnswerBtn" disabled>Подтвердить ответ</button>
+            </div>
+        `;
+        
+        document.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', () => {
+                const value = parseInt(option.dataset.value);
+                selectAnswer(value);
+            });
+        });
+        
+        startTimer();
+    }
+
+    function selectAnswer(value) {
+        currentSelectedAnswer = value;
+        
+        document.querySelectorAll('.option').forEach(opt => {
+            opt.classList.remove('selected');
+            const radio = opt.querySelector('input');
+            radio.checked = false;
+        });
+        
+        const selectedOpt = document.querySelector(`.option[data-value="${value}"]`);
+        if (selectedOpt) {
+            selectedOpt.classList.add('selected');
+            const radio = selectedOpt.querySelector('input');
+            radio.checked = true;
+        }
+        
+        const confirmBtn = document.getElementById('confirmAnswerBtn');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+        }
+    }
+
+    function confirmAndNext() {
+        if (currentSelectedAnswer === null) return;
+        
+        const questions = getTestQuestions(currentTestLevel);
+        const q = questions[currentQuestionIndex];
+        const isCorrect = (currentSelectedAnswer === q.correct);
+        
+        userAnswers.push({
+            question: q.text,
+            user_answer: q.options[currentSelectedAnswer],
+            is_correct: isCorrect,
+            correct_answer: q.options[q.correct]
+        });
+        
+        currentQuestionIndex++;
+        currentSelectedAnswer = null;
+        
+        if (currentQuestionIndex < questions.length) {
+            showQuestion();
+        } else {
+            finishTest();
+        }
+    }
+
+    function resetTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+        timeLeft = 40;
+        document.getElementById('timer').textContent = timeLeft;
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                if (currentSelectedAnswer !== null) {
+                    confirmAndNext();
+                } else {
+                    const questions = getTestQuestions(currentTestLevel);
+                    const q = questions[currentQuestionIndex];
+                    userAnswers.push({
+                        question: q.text,
+                        user_answer: "Время вышло, ответ не выбран",
+                        is_correct: false,
+                        correct_answer: q.options[q.correct]
+                    });
+                    currentQuestionIndex++;
+                    currentSelectedAnswer = null;
+                    
+                    if (currentQuestionIndex < questions.length) {
+                        showQuestion();
+                    } else {
+                        finishTest();
+                    }
+                }
+            }
+        }, 1000);
+    }
+
+    async function finishTest() {
+        clearInterval(timerInterval);
+        
+        const questions = getTestQuestions(currentTestLevel);
+        const correctCount = userAnswers.filter(a => a.is_correct).length;
+        
+        try {
+            const result = {
+                user_id: currentUser.id,
+                user_login: currentUser.login,
+                user_name: currentUser.full_name,
+                level: currentTestLevel,
+                answers: userAnswers,
+                score: correctCount,
+                total_questions: questions.length,
+                passed: correctCount === questions.length,
+                completed_at: new Date().toISOString()
+            };
+            
+            await fetch(`${SUPABASE_URL}/rest/v1/test_results`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(result)
+            });
+            
+            if (currentTestLevel === 1 || currentTestLevel === 2) {
+                await updateTestPassed(currentTestLevel);
+            } else if (currentTestLevel === 3) {
+                await updateLevel3TestPassed();
+            }
+            
+        } catch (error) {
+            console.error('Ошибка сохранения:', error);
+        }
+        
+        const nextMessage = currentTestLevel === 1 
+            ? 'Для перехода на уровень 2 обратитесь к тимлидеру'
+            : (currentTestLevel === 2 
+                ? 'Для перехода на уровень 3 обратитесь к тимлидеру'
+                : 'Поздравляем! Вы прошли полное обучение!');
+        
+        document.getElementById('nextStepMessage').textContent = nextMessage;
+        document.getElementById('testQuestionsArea').style.display = 'none';
+        document.getElementById('testResultArea').style.display = 'block';
+        
+        updateContent();
+    }
+
+    async function performLogin(login, password) {
+        const result = await checkUserLogin(login, password);
+        
+        if (result.success) {
+            currentUser = result.user;
+            
+            localStorage.setItem('userId', currentUser.id);
+            localStorage.setItem('userLogin', currentUser.login);
+            
+            document.getElementById('userName').textContent = currentUser.full_name;
+            document.getElementById('userTelegram').textContent = `@${currentUser.telegram_nick}`;
+            document.getElementById('levelBadge').textContent = `Уровень ${currentUser.current_level}`;
+            
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('mainPage').style.display = 'block';
+            
+            currentPage = 'main';
+            document.getElementById('mainPageBtn').classList.add('active');
+            document.getElementById('materialsBtn').classList.remove('active');
+            updateContent();
+        } else {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = result.error;
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    async function checkAutoLogin() {
+        const savedUserId = localStorage.getItem('userId');
+        
+        if (savedUserId) {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${savedUserId}&select=*`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const users = await response.json();
+                    if (users.length > 0) {
+                        currentUser = users[0];
+                        
+                        document.getElementById('userName').textContent = currentUser.full_name;
+                        document.getElementById('userTelegram').textContent = `@${currentUser.telegram_nick}`;
+                        document.getElementById('levelBadge').textContent = `Уровень ${currentUser.current_level}`;
+                        
+                        document.getElementById('loginPage').style.display = 'none';
+                        document.getElementById('mainPage').style.display = 'block';
+                        
+                        currentPage = 'main';
+                        updateContent();
+                    }
+                }
+            } catch (error) {
+                console.error('Auto-login error:', error);
+            }
+        }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const login = document.getElementById('loginInput').value;
+        const password = document.getElementById('passwordInput').value;
+        await performLogin(login, password);
+    });
+    
+    document.getElementById('mainPageBtn').addEventListener('click', () => {
+        currentPage = 'main';
+        document.getElementById('mainPageBtn').classList.add('active');
+        document.getElementById('materialsBtn').classList.remove('active');
+        updateContent();
+    });
+    
+    document.getElementById('materialsBtn').addEventListener('click', () => {
+        currentPage = 'materials';
+        document.getElementById('materialsBtn').classList.add('active');
+        document.getElementById('mainPageBtn').classList.remove('active');
+        updateContent();
+    });
+    
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        currentUser = null;
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userLogin');
+        document.getElementById('loginPage').style.display = 'flex';
+        document.getElementById('mainPage').style.display = 'none';
+        document.getElementById('loginInput').value = '';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('loginError').style.display = 'none';
+    });
+    
+    document.getElementById('startTestBtn').addEventListener('click', startTest);
+    document.getElementById('reviewMaterialBtn').addEventListener('click', () => {
+        document.getElementById('testModal').style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    document.getElementById('closeTestModalBtn').addEventListener('click', () => {
+        document.getElementById('testModal').style.display = 'none';
+    });
+    
+    document.getElementById('questionsContainer').addEventListener('click', (e) => {
+        if (e.target.id === 'confirmAnswerBtn' || e.target.closest('#confirmAnswerBtn')) {
+            confirmAndNext();
+        }
+    });
+    
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('mainPage').style.display = 'none';
+    
+    checkAutoLogin();
+</script>
+
+</body>
+</html>
