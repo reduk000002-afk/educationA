@@ -131,6 +131,33 @@
             gap: 16px;
         }
 
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            margin-left: 32px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            padding: 8px 20px;
+            border-radius: 20px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+
+        .nav-btn:hover {
+            background: #1a1a1a;
+        }
+
         .avatar {
             width: 48px;
             height: 48px;
@@ -218,12 +245,24 @@
             color: #8a8a8a;
         }
 
+        .coming-soon {
+            text-align: center;
+            padding: 60px;
+            background: #0a0a0a;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+            color: #888;
+        }
+
         @media (max-width: 768px) {
             .videos-grid {
                 grid-template-columns: 1fr;
             }
             .header {
                 padding: 12px 16px;
+            }
+            .nav-buttons {
+                margin-left: 0;
             }
         }
     </style>
@@ -262,34 +301,17 @@
                     <p id="userTelegram">@загрузка</p>
                 </div>
                 <div class="level-badge" id="levelBadge">Уровень 1</div>
+                <div class="nav-buttons">
+                    <button class="nav-btn active" id="mainPageBtn">Главная</button>
+                    <button class="nav-btn" id="materialsBtn">Материалы</button>
+                </div>
             </div>
             <button class="logout-btn" id="logoutBtn">Выйти</button>
         </div>
     </div>
 
-    <div class="content">
-        <div class="videos-section">
-            <h1>📹 Обучающие видео</h1>
-            <div class="videos-grid">
-                <!-- ВИДЕО 1: Сфера инвестиций -->
-                <div class="video-card">
-                    <video controls>
-                        <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/sfeeeeeeeera.mp4" type="video/mp4">
-                    </video>
-                    <div class="video-title">Сфера инвестиций</div>
-                    <div class="video-description">Базовые принципы и стратегии инвестирования</div>
-                </div>
-                
-                <!-- ВИДЕО 2: Фильтрация трафика -->
-                <div class="video-card">
-                    <video controls>
-                        <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/filtrasia.mp4" type="video/mp4">
-                    </video>
-                    <div class="video-title">Фильтрация трафика</div>
-                    <div class="video-description">Как правильно фильтровать и анализировать трафик</div>
-                </div>
-            </div>
-        </div>
+    <div class="content" id="contentArea">
+        <!-- Содержимое будет меняться -->
     </div>
 </div>
 
@@ -299,6 +321,15 @@
     const SUPABASE_KEY = 'sb_publishable_25VHjp6VP8_OcNsPuBBpqg_0hua7oPG';
     
     let currentUser = null;
+    let currentPage = 'main'; // main или materials
+
+    // ВСЕ ВИДЕО
+    const allVideos = [
+        { level: 1, file: 'sfeeeeeeeera.mp4', title: 'Сфера инвестиций', description: 'Базовые принципы и стратегии инвестирования' },
+        { level: 1, file: 'Vbros.mp4', title: 'Вброс', description: 'Анализ рыночных вбросов' },
+        { level: 2, file: 'predloga.mp4', title: 'Предлога', description: 'Работа с предложениями' },
+        { level: 2, file: 'Vbros.mp4', title: 'Вброс', description: 'Углубленный анализ вбросов' }
+    ];
 
     // Функция входа
     async function checkLogin(login, password) {
@@ -325,6 +356,67 @@
         }
     }
 
+    // Получить видео для главной страницы (по текущему уровню)
+    function getMainPageVideos() {
+        if (currentUser.current_level === 1) {
+            return allVideos.filter(v => v.level === 1);
+        } else if (currentUser.current_level === 2) {
+            return allVideos.filter(v => v.level === 2);
+        } else {
+            return [];
+        }
+    }
+
+    // Получить видео для страницы материалов (по unlocked_level)
+    function getMaterialsVideos() {
+        const unlockedLevel = currentUser.unlocked_level || 1;
+        if (unlockedLevel === 1) {
+            return allVideos.filter(v => v.level === 1);
+        } else if (unlockedLevel === 2) {
+            return allVideos.filter(v => v.level === 1 || v.level === 2);
+        } else {
+            return allVideos;
+        }
+    }
+
+    // Отобразить видео
+    function renderVideos(videos) {
+        const contentArea = document.getElementById('contentArea');
+        
+        if (videos.length === 0) {
+            contentArea.innerHTML = '<div class="coming-soon"><h2>📚 Скоро будут новые материалы</h2><p>Третий уровень откроется позже</p></div>';
+            return;
+        }
+
+        contentArea.innerHTML = `
+            <div class="videos-section">
+                <h1>📹 Обучающие видео</h1>
+                <div class="videos-grid">
+                    ${videos.map(video => `
+                        <div class="video-card">
+                            <video controls>
+                                <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/${video.file}" type="video/mp4">
+                            </video>
+                            <div class="video-title">${video.title}</div>
+                            <div class="video-description">${video.description}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Обновить контент в зависимости от страницы
+    function updateContent() {
+        if (currentPage === 'main') {
+            const videos = getMainPageVideos();
+            renderVideos(videos);
+        } else if (currentPage === 'materials') {
+            const videos = getMaterialsVideos();
+            renderVideos(videos);
+        }
+    }
+
     // Обработчик формы входа
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -346,10 +438,29 @@
             // Показываем основную страницу
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('mainPage').style.display = 'block';
+            
+            // Загружаем контент
+            currentPage = 'main';
+            updateContent();
         } else {
             errorDiv.textContent = result.error;
             errorDiv.style.display = 'block';
         }
+    });
+    
+    // Навигация
+    document.getElementById('mainPageBtn').addEventListener('click', () => {
+        currentPage = 'main';
+        document.getElementById('mainPageBtn').classList.add('active');
+        document.getElementById('materialsBtn').classList.remove('active');
+        updateContent();
+    });
+    
+    document.getElementById('materialsBtn').addEventListener('click', () => {
+        currentPage = 'materials';
+        document.getElementById('materialsBtn').classList.add('active');
+        document.getElementById('mainPageBtn').classList.remove('active');
+        updateContent();
     });
     
     // Выход
