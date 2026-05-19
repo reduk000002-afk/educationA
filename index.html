@@ -246,38 +246,11 @@
             overflow: hidden;
         }
 
-        .video-container {
-            position: relative;
-        }
-
         video {
             width: 100%;
             aspect-ratio: 16 / 9;
             background: #000;
-        }
-
-        .video-controls {
-            display: flex;
-            gap: 12px;
-            padding: 12px 20px;
-            background: #0f0f0f;
-            border-top: 1px solid #2a2a2a;
-        }
-
-        .video-controls button {
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            color: #ffffff;
-            padding: 6px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-
-        .video-controls button:hover {
-            background: #2a2a2a;
-            border-color: #ffffff;
+            display: block;
         }
 
         .video-title {
@@ -539,7 +512,6 @@
     <div class="content" id="contentArea"></div>
 </div>
 
-<!-- Модальное окно теста -->
 <div id="testModal" class="modal">
     <div class="modal-content">
         <div id="testIntro" style="text-align: center;">
@@ -581,7 +553,6 @@
     let currentSelectedAnswer = null;
     let currentTestLevel = 1;
 
-    // Вопросы теста 1 уровня
     const level1Questions = [
         {
             text: "Пассивный доход это",
@@ -610,7 +581,6 @@
         }
     ];
 
-    // Вопросы теста 2 уровня
     const level2Questions = [
         {
             text: "Обязательно ли делать клиенту индикаторный вброс если в базе он чистый?",
@@ -763,15 +733,9 @@
                 <div class="videos-grid">
                     ${videos.map(video => `
                         <div class="video-card">
-                            <div class="video-container">
-                                <video id="video-${video.id}" controls preload="metadata">
-                                    <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/${video.file}" type="video/mp4">
-                                </video>
-                                <div class="video-controls">
-                                    <button class="seek-back-10" data-video-id="${video.id}">⏪ -10 сек</button>
-                                    <button class="seek-forward-10" data-video-id="${video.id}">+10 сек ⏩</button>
-                                </div>
-                            </div>
+                            <video controls preload="metadata">
+                                <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/${video.file}" type="video/mp4">
+                            </video>
                             <div class="video-title">${video.title}</div>
                             <div class="video-subtitle">${video.subtitle}</div>
                         </div>
@@ -791,26 +755,6 @@
         
         document.querySelectorAll('video').forEach(video => {
             setupVideoHandlers(video);
-        });
-        
-        document.querySelectorAll('.seek-back-10').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const videoId = btn.dataset.videoId;
-                const video = document.getElementById(`video-${videoId}`);
-                if (video) {
-                    video.currentTime = Math.max(0, video.currentTime - 10);
-                }
-            });
-        });
-        
-        document.querySelectorAll('.seek-forward-10').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const videoId = btn.dataset.videoId;
-                const video = document.getElementById(`video-${videoId}`);
-                if (video) {
-                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
-                }
-            });
         });
         
         if (testInfo.show) {
@@ -984,7 +928,6 @@
         const questions = getTestQuestions(currentTestLevel);
         const correctCount = userAnswers.filter(a => a.is_correct).length;
         
-        // Сохраняем в Supabase
         try {
             const result = {
                 user_id: currentUser.id,
@@ -1012,30 +955,6 @@
             
         } catch (error) {
             console.error('Ошибка сохранения:', error);
-        }
-        
-        // Отправка в Telegram через Python сервер
-        try {
-            const response = await fetch('http://localhost:3000/test-result', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userName: currentUser.full_name,
-                    userLogin: currentUser.login,
-                    score: correctCount,
-                    total: questions.length,
-                    level: currentTestLevel,
-                    answers: userAnswers
-                })
-            });
-            const data = await response.json();
-            if (data.success) {
-                console.log('✅ Уведомление отправлено в Telegram');
-            } else {
-                console.log('❌ Ошибка отправки:', data.message);
-            }
-        } catch (e) {
-            console.error('❌ Ошибка соединения с сервером Telegram:', e);
         }
         
         const nextMessage = currentTestLevel === 1 
