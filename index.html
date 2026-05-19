@@ -2,15 +2,366 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Видео</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Обучение | Вход и видео</title>
     <style>
-        body { background: #000; margin: 0; padding: 40px; }
-        video { width: 100%; max-width: 800px; display: block; margin: 0 auto; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        /* СТРАНИЦА ВХОДА */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000000;
+        }
+
+        .login-box {
+            background: #0a0a0a;
+            padding: 48px 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 440px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .login-box h1 {
+            font-size: 28px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .login-box .subtitle {
+            text-align: center;
+            color: #6b6b6b;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #d0d0d0;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            font-size: 15px;
+            color: #ffffff;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ffffff;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #000000;
+            cursor: pointer;
+        }
+
+        .login-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .error-message {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 16px;
+            text-align: center;
+            color: #ff4444;
+            font-size: 14px;
+        }
+
+        /* ОСНОВНАЯ СТРАНИЦА */
+        .main-container {
+            display: none;
+            min-height: 100vh;
+        }
+
+        /* Шапка с профилем */
+        .header {
+            background: #0a0a0a;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 16px 32px;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .profile-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #333, #1a1a1a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .profile-info h3 {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .profile-info p {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .level-badge {
+            background: #1a1a1a;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            border: 1px solid #333;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .logout-btn:hover {
+            background: #1a1a1a;
+        }
+
+        /* Контент */
+        .content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .videos-section h1 {
+            font-size: 24px;
+            margin-bottom: 24px;
+        }
+
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 32px;
+        }
+
+        .video-card {
+            background: #0a0a0a;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+        }
+
+        .video-title {
+            padding: 16px 20px 8px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .video-description {
+            padding: 0 20px 20px;
+            font-size: 14px;
+            color: #8a8a8a;
+        }
+
+        @media (max-width: 768px) {
+            .videos-grid {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                padding: 12px 16px;
+            }
+        }
     </style>
 </head>
 <body>
-    <video controls>
-        <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/sfeeeeeeeera.mp4" type="video/mp4">
-    </video>
+
+<!-- СТРАНИЦА ВХОДА -->
+<div id="loginPage" class="login-container">
+    <div class="login-box">
+        <h1>Корпоративное обучение</h1>
+        <p class="subtitle">Войдите с использованием своих учетных данных</p>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Логин</label>
+                <input type="text" id="login" placeholder="Введите логин" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="password" placeholder="Введите пароль">
+            </div>
+            <button type="submit" class="login-btn">Войти</button>
+            <div id="loginError" class="error-message" style="display: none;"></div>
+        </form>
+    </div>
+</div>
+
+<!-- ОСНОВНАЯ СТРАНИЦА -->
+<div id="mainPage" class="main-container">
+    <div class="header">
+        <div class="header-content">
+            <div class="profile-left">
+                <div class="avatar">👤</div>
+                <div class="profile-info">
+                    <h3 id="userName">Загрузка...</h3>
+                    <p id="userTelegram">@загрузка</p>
+                </div>
+                <div class="level-badge" id="levelBadge">Уровень 1</div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">Выйти</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="videos-section">
+            <h1>📹 Обучающие видео</h1>
+            <div class="videos-grid" id="videosGrid">
+                <div class="video-card">
+                    <video controls>
+                        <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/sfeeeeeeeera.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-title">Основы работы</div>
+                    <div class="video-description">Базовый обучающий материал</div>
+                </div>
+                <div class="video-card">
+                    <video controls>
+                        <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/sfeeeeeeeera.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-title">Продвинутые техники</div>
+                    <div class="video-description">Второе видео для закрепления материала</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Конфигурация Supabase
+    const SUPABASE_URL = 'https://hmlcwfrbymdnofhunibd.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_25VHjp6VP8_OcNsPuBBpqg_0hua7oPG';
+    
+    let currentUser = null;
+
+    // Функция входа
+    async function checkLogin(login, password) {
+        try {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/users?login=eq.${login}&select=*`, {
+                method: 'GET',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const users = await response.json();
+                if (users.length > 0 && users[0].password === password) {
+                    return { success: true, user: users[0] };
+                }
+            }
+            return { success: false, error: 'Неверный логин или пароль' };
+        } catch (error) {
+            console.error('Ошибка входа:', error);
+            return { success: false, error: 'Ошибка подключения к базе данных' };
+        }
+    }
+
+    // Обработчик формы входа
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const login = document.getElementById('login').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('loginError');
+        
+        const result = await checkLogin(login, password);
+        
+        if (result.success) {
+            currentUser = result.user;
+            
+            // Заполняем профиль
+            document.getElementById('userName').textContent = currentUser.full_name;
+            document.getElementById('userTelegram').textContent = `@${currentUser.telegram_nick}`;
+            document.getElementById('levelBadge').textContent = `Уровень ${currentUser.current_level}`;
+            
+            // Показываем основную страницу
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('mainPage').style.display = 'block';
+        } else {
+            errorDiv.textContent = result.error;
+            errorDiv.style.display = 'block';
+        }
+    });
+    
+    // Выход
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        currentUser = null;
+        document.getElementById('loginPage').style.display = 'flex';
+        document.getElementById('mainPage').style.display = 'none';
+        document.getElementById('login').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('loginError').style.display = 'none';
+    });
+    
+    // Начальное состояние
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('mainPage').style.display = 'none';
+</script>
+
 </body>
 </html>
