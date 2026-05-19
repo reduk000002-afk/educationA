@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Корпоративное обучение | Тестовая версия</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        /* СТРАНИЦА ВХОДА */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #000000 0%, #0a0a0a 100%);
+        }
+
+        .login-box {
+            background: #0a0a0a;
+            padding: 48px 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 440px;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-box h1 {
+            font-size: 28px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .login-box .subtitle {
+            text-align: center;
+            color: #6b6b6b;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #d0d0d0;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            font-size: 15px;
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ffffff;
+            background: #1a1a1a;
+        }
+
+        .form-group input::placeholder {
+            color: #3a3a3a;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #000000;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+        }
+
+        .login-btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 16px;
+            text-align: center;
+            color: #ff4444;
+            font-size: 14px;
+        }
+
+        /* ОСНОВНАЯ СТРАНИЦА (после входа) */
+        .main-container {
+            display: none;
+            min-height: 100vh;
+            background: #000000;
+        }
+
+        /* Шапка */
+        .header {
+            background: #0a0a0a;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 16px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-area h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .profile-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .level-badge {
+            background: #1a1a1a;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #ffffff;
+            border: 1px solid #333;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: #1a1a1a;
+            border-color: #444;
+        }
+
+        /* Контент */
+        .content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        /* Видео секция */
+        .videos-section {
+            margin-bottom: 48px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+        }
+
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 32px;
+        }
+
+        .video-card {
+            background: #0a0a0a;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+            overflow: hidden;
+        }
+
+        .video-player {
+            width: 100%;
+            background: #000000;
+        }
+
+        .video-player video {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000000;
+        }
+
+        .video-title {
+            padding: 16px 20px 8px 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .video-description {
+            padding: 0 20px 16px 20px;
+            font-size: 14px;
+            color: #8a8a8a;
+        }
+
+        .notes-section {
+            padding: 0 20px 20px 20px;
+            border-top: 1px solid #1a1a1a;
+            margin-top: 8px;
+        }
+
+        .notes-label {
+            font-size: 13px;
+            color: #8a8a8a;
+            margin-bottom: 8px;
+            margin-top: 16px;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            padding: 12px;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .notes-textarea:focus {
+            outline: none;
+            border-color: #ffffff;
+        }
+
+        /* Кнопка теста */
+        .test-section {
+            text-align: center;
+            padding: 32px;
+            background: #0a0a0a;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .test-btn {
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .test-btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-1px);
+        }
+
+        .test-result {
+            margin-top: 16px;
+            font-size: 14px;
+            color: #4ade80;
+        }
+
+        /* Модальное окно теста */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .modal-content h3 {
+            font-size: 24px;
+            margin-bottom: 24px;
+        }
+
+        .question {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .question-text {
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            background: #141414;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .option input {
+            cursor: pointer;
+        }
+
+        .option label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .submit-test {
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            width: 100%;
+        }
+
+        .close-modal {
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 40px;
+            cursor: pointer;
+            margin-top: 12px;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .videos-grid {
+                grid-template-columns: 1fr;
+            }
+            .content {
+                padding: 16px;
+            }
+            .header {
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- СТРАНИЦА ВХОДА -->
+<div id="loginPage" class="login-container">
+    <div class="login-box">
+        <h1>Корпоративное обучение</h1>
+        <p class="subtitle">Войдите в систему для доступа к материалам</p>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Логин</label>
+                <input type="text" id="login" placeholder="Введите логин" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="password" placeholder="Введите пароль">
+            </div>
+            <button type="submit" class="login-btn">Войти</button>
+            <div id="loginError" class="error-message" style="display: none;"></div>
+        </form>
+    </div>
+</div>
+
+<!-- ОСНОВНАЯ СТРАНИЦА -->
+<div id="mainPage" class="main-container">
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-area">
+                <h2>Обучение</h2>
+            </div>
+            <div class="profile-area">
+                <div class="level-badge" id="levelBadge">Уровень 1</div>
+                <div class="user-info">
+                    <div class="user-avatar">👤</div>
+                    <span class="user-name" id="userName"></span>
+                </div>
+                <button class="logout-btn" id="logoutBtn">Выйти</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="videos-section">
+            <h1 class="section-title">Обучающие видео</h1>
+            <div class="videos-grid" id="videosGrid">
+                <!-- Видео будут загружены через JavaScript -->
+            </div>
+        </div>
+
+        <div class="test-section">
+            <button class="test-btn" id="testBtn">Пройти тест</button>
+            <div id="testResult" class="test-result"></div>
+        </div>
+    </div>
+</div>
+
+<!-- МОДАЛЬНОЕ ОКНО ТЕСТА -->
+<div id="testModal" class="modal">
+    <div class="modal-content">
+        <h3>Тест по материалам</h3>
+        <div id="testQuestions"></div>
+        <button class="submit-test" id="submitTest">Проверить ответы</button>
+        <button class="close-modal" id="closeModal">Закрыть</button>
+    </div>
+</div>
+
+<script>
+    // Конфигурация Supabase
+    const SUPABASE_URL = 'https://hmlcwfrbymdnofhunibd.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_25VHjp6VP8_OcNsPuBBpqg_0hua7oPG';
+    
+    let currentUser = null;
+    let currentLevel = 1;
+    let questions = [];
+
+    // Вспомогательная функция для запросов к Supabase
+    async function querySupabase(sql, params = []) {
+        // Для простоты используем прямой REST API
+        try {
+            // Получаем данные из таблицы test_users
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/execute_sql`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                },
+                body: JSON.stringify({ query: sql })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Ошибка запроса:', error);
+            return null;
+        }
+    }
+
+    // Проверка логина через таблицу test_users
+    async function checkLogin(login, password) {
+        try {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/test_users?login=eq.${login}&select=*`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                }
+            });
+            
+            if (response.ok) {
+                const users = await response.json();
+                if (users.length > 0 && users[0].password === password) {
+                    return { success: true, user: users[0] };
+                }
+            }
+            return { success: false, error: 'Неверный логин или пароль' };
+        } catch (error) {
+            console.error('Ошибка входа:', error);
+            return { success: false, error: 'Ошибка подключения к базе данных' };
+        }
+    }
+
+    // Получение видео из таблицы videos
+    async function getVideos() {
+        try {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?select=*&order=level.asc,video_number.asc`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                }
+            });
+            
+            if (response.ok) {
+                return await response.json();
+            }
+            return [];
+        } catch (error) {
+            console.error('Ошибка загрузки видео:', error);
+            return [];
+        }
+    }
+
+    // Получение тестовых вопросов для 1 уровня
+    async function getTests(level) {
+        try {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/tests?select=*&level=eq.${level}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                }
+            });
+            
+            if (response.ok) {
+                return await response.json();
+            }
+            return [];
+        } catch (error) {
+            console.error('Ошибка загрузки тестов:', error);
+            return [];
+        }
+    }
+
+    // Сохранение заметки
+    async function saveNote(videoId, noteText) {
+        if (!currentUser) return;
+        
+        try {
+            // Проверяем есть ли уже заметка
+            const checkResponse = await fetch(`${SUPABASE_URL}/rest/v1/video_notes?user_id=eq.${currentUser.id}&video_id=eq.${videoId}&select=id`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                }
+            });
+            
+            const existing = await checkResponse.json();
+            
+            if (existing.length > 0) {
+                // Обновляем существующую
+                await fetch(`${SUPABASE_URL}/rest/v1/video_notes?id=eq.${existing[0].id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({ note_text: noteText, updated_at: new Date().toISOString() })
+                });
+            } else {
+                // Создаем новую
+                await fetch(`${SUPABASE_URL}/rest/v1/video_notes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        user_id: currentUser.id,
+                        video_id: videoId,
+                        note_text: noteText
+                    })
+                });
+            }
+        } catch (error) {
+            console.error('Ошибка сохранения заметки:', error);
+        }
+    }
+
+    // Загрузка заметок
+    async function loadNotes() {
+        if (!currentUser) return {};
+        
+        try {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/video_notes?user_id=eq.${currentUser.id}&select=*`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                }
+            });
+            
+            if (response.ok) {
+                const notes = await response.json();
+                const notesMap = {};
+                notes.forEach(note => {
+                    notesMap[note.video_id] = note.note_text;
+                });
+                return notesMap;
+            }
+            return {};
+        } catch (error) {
+            console.error('Ошибка загрузки заметок:', error);
+            return {};
+        }
+    }
+
+    // Отображение видео
+    async function renderVideos() {
+        const videos = await getVideos();
+        const notes = await loadNotes();
+        const videosGrid = document.getElementById('videosGrid');
+        
+        // Показываем только видео 1 уровня
+        const level1Videos = videos.filter(v => v.level === 1);
+        
+        videosGrid.innerHTML = level1Videos.map(video => `
+            <div class="video-card">
+                <div class="video-player">
+                    <video controls>
+                        <source src="${video.url}" type="video/mp4">
+                        Ваш браузер не поддерживает видео
+                    </video>
+                </div>
+                <div class="video-title">${video.title}</div>
+                <div class="video-description">${video.description || 'Обучающий материал'}</div>
+                <div class="notes-section">
+                    <div class="notes-label">📝 Заметки (сохраняются автоматически)</div>
+                    <textarea 
+                        class="notes-textarea" 
+                        id="note-${video.id}" 
+                        rows="3" 
+                        placeholder="Записывайте вопросы и важные моменты..."
+                        onblur="saveNote('${video.id}', this.value)"
+                    >${notes[video.id] || ''}</textarea>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Сохранение заметки в глобальную функцию
+    window.saveNote = saveNote;
+
+    // Показ теста
+    async function showTest() {
+        const testQuestions = await getTests(1);
+        if (!testQuestions || testQuestions.length === 0) {
+            alert('Тестовые вопросы еще не загружены');
+            return;
+        }
+        
+        questions = testQuestions;
+        const testModal = document.getElementById('testModal');
+        const testQuestionsDiv = document.getElementById('testQuestions');
+        
+        testQuestionsDiv.innerHTML = questions.map((q, idx) => `
+            <div class="question">
+                <div class="question-text">${idx + 1}. ${q.question_text}</div>
+                <div class="options">
+                    ${JSON.parse(q.options).map((opt, optIdx) => `
+                        <label class="option">
+                            <input type="radio" name="q${idx}" value="${optIdx}">
+                            <span>${opt}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+        
+        testModal.style.display = 'flex';
+    }
+
+    // Проверка теста
+    function checkTest() {
+        let correct = 0;
+        questions.forEach((q, idx) => {
+            const selected = document.querySelector(`input[name="q${idx}"]:checked`);
+            if (selected && parseInt(selected.value) === q.correct_answer) {
+                correct++;
+            }
+        });
+        
+        const total = questions.length;
+        const resultDiv = document.getElementById('testResult');
+        
+        if (correct === total) {
+            resultDiv.innerHTML = '✅ Поздравляем! Вы успешно прошли тест! Первый этап обучения пройден. Для разблокировки второго этапа обратитесь к тимлидеру.';
+            resultDiv.style.color = '#4ade80';
+        } else {
+            resultDiv.innerHTML = `❌ Вы ответили правильно на ${correct} из ${total} вопросов. Попробуйте еще раз внимательнее изучить материалы.`;
+            resultDiv.style.color = '#ff4444';
+        }
+        
+        document.getElementById('testModal').style.display = 'none';
+    }
+
+    // Обработчики событий
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const login = document.getElementById('login').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('loginError');
+        
+        const result = await checkLogin(login, password);
+        
+        if (result.success) {
+            currentUser = result.user;
+            document.getElementById('userName').textContent = login;
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('mainPage').style.display = 'block';
+            await renderVideos();
+        } else {
+            errorDiv.textContent = result.error;
+            errorDiv.style.display = 'block';
+        }
+    });
+    
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        currentUser = null;
+        document.getElementById('loginPage').style.display = 'flex';
+        document.getElementById('mainPage').style.display = 'none';
+        document.getElementById('login').value = '';
+        document.getElementById('password').value = '';
+    });
+    
+    document.getElementById('testBtn').addEventListener('click', showTest);
+    document.getElementById('submitTest').addEventListener('click', checkTest);
+    document.getElementById('closeModal').addEventListener('click', () => {
+        document.getElementById('testModal').style.display = 'none';
+    });
+    
+    // Закрытие модалки по клику вне области
+    window.onclick = (event) => {
+        const modal = document.getElementById('testModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
+    
+    // Начальная настройка
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('mainPage').style.display = 'none';
+</script>
+
+</body>
+</html>
