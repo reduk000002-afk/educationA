@@ -455,6 +455,85 @@
             margin-bottom: 16px;
         }
 
+        /* Стили для третьего уровня */
+        .notes-container {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+
+        .notes-container h2 {
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+
+        .notes-container p {
+            color: #aaa;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .note-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .note-number {
+            width: 40px;
+            height: 40px;
+            background: #1a1a1a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #888;
+        }
+
+        .note-item input {
+            flex: 1;
+            padding: 12px 16px;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .note-item input:focus {
+            outline: none;
+            border-color: #ffffff;
+        }
+
+        .submit-notes-btn {
+            width: 100%;
+            padding: 14px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+
+        .submit-notes-btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+
         @media (max-width: 768px) {
             .videos-grid {
                 grid-template-columns: 1fr;
@@ -512,6 +591,7 @@
     <div class="content" id="contentArea"></div>
 </div>
 
+<!-- Модальное окно теста -->
 <div id="testModal" class="modal">
     <div class="modal-content">
         <div id="testIntro" style="text-align: center;">
@@ -609,6 +689,22 @@
         }
     ];
 
+    const level3Questions = [
+        { text: "Пассивный доход это", options: ["Акции, крипта", "Бизнес", "Это способ заработка, который не требует от вас участия и ежедневной активности"], correct: 2 },
+        { text: "Потребность это", options: ["Желание клиента инвестировать вместе с аналитиком", "Цели, планы на какой-то период жизни, желание что-то сделать - добиться", "Зависимость человека от чего-то"], correct: 1 },
+        { text: "Прогрев это", options: ["Предложение начать инвестировать вместе с аналитиком", "Диалог о сфере, развитии в ходе которого мы меняем мышление человека", "Информация про сферу инвестиций/ аналитика"], correct: 1 },
+        { text: "Вброс это", options: ["Предложение начать инвестировать вместе с аналитиком", "Информация про сферу инвестиций/ аналитика", "Диалог о сфере, развитии в ходе которого мы меняем мышление человека"], correct: 1 },
+        { text: "Мы обязательно должны узнать про клиента", options: ["Имя, номер, рост, женат/нет", "Имя, возраст, откуда он, работа, хобби, опыт и отношение к сфере, недвижимость/ автомобиль (по возможности)", "В каких странах был, имя, Инстаграм, ВК"], correct: 1 },
+        { text: "Возрастной порог клиентов", options: ["26+", "18+", "25+"], correct: 0 },
+        { text: "Мы не берём в работу", options: ["Слесарь, пекарь, инженер", "Айтишник, трейдер, банковский сотрудник", "Женщин"], correct: 1 },
+        { text: "Для того чтобы начать работу с Александром необходимо иметь", options: ["Инвест портфель на Руской бирже", "Миллион рублей", "Время, желание и минимальный капитал"], correct: 2 },
+        { text: "Первый вброс мы делаем на", options: ["3 день общения", "1 день общения", "5 день общения"], correct: 1 },
+        { text: "Мы стараемся оградить клиентов от", options: ["Знаний про инвестиции", "Сайтов знакомств", "Семьи"], correct: 1 },
+        { text: "Если клиент не открыт к диалогу , не рассказывает о себе, сухо общается", options: ["Пытаемся узнать почему так, если ничего не меняется - кидаем в архив", "Навязываемся, упрашиваем продолжить общение что бы не потерять клиента", "Общаемся с ним так как он хочет"], correct: 0 },
+        { text: "Можно ли передать клиента с хорошей зарплатой, но просрочками по кредитам?", options: ["Да", "Нет"], correct: 1 },
+        { text: "AurumTrade это", options: ["Темка - мутка", "Ворк Тима где обманывают лохов и мамонтов", "Онлайн офис где нужно уделять работе от 7 часов в день и можно хорошо заработать"], correct: 2 }
+    ];
+
     const allVideos = [
         { id: 1, level: 1, file: 'sfeeeeeeeera.mp4', title: 'Урок 1', subtitle: 'Сфера инвестиций' },
         { id: 2, level: 1, file: 'filtrasia.mp4', title: 'Урок 2', subtitle: 'Фильтрация трафика' },
@@ -663,7 +759,7 @@
             });
             if (level === 1) {
                 currentUser.level1_test_passed = true;
-            } else {
+            } else if (level === 2) {
                 currentUser.level2_test_passed = true;
             }
         } catch (error) {
@@ -671,38 +767,114 @@
         }
     }
 
-    function getMainPageVideos() {
+    async function updateLevel3Notes(notes) {
+        try {
+            await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${currentUser.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ level3_notes: notes })
+            });
+            currentUser.level3_notes = notes;
+        } catch (error) {
+            console.error('Ошибка сохранения заметок:', error);
+        }
+    }
+
+    async function updateLevel3TestPassed() {
+        try {
+            await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${currentUser.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ level3_test_passed: true })
+            });
+            currentUser.level3_test_passed = true;
+        } catch (error) {
+            console.error('Ошибка обновления:', error);
+        }
+    }
+
+    function getMainPageContent() {
         if (currentUser.current_level === 1) {
-            return allVideos.filter(v => v.level === 1);
+            return { type: 'videos', videos: allVideos.filter(v => v.level === 1), testLevel: 1, testPassed: currentUser.level1_test_passed };
         } else if (currentUser.current_level === 2) {
-            return allVideos.filter(v => v.level === 2);
+            return { type: 'videos', videos: allVideos.filter(v => v.level === 2), testLevel: 2, testPassed: currentUser.level2_test_passed };
+        } else if (currentUser.current_level === 3) {
+            return { type: 'level3', testPassed: currentUser.level3_test_passed };
         }
-        return [];
+        return { type: 'empty' };
     }
 
-    function getMaterialsVideos() {
+    function getMaterialsContent() {
         if (currentUser.current_level === 1) {
-            return allVideos.filter(v => v.level === 1);
+            return { type: 'videos', videos: allVideos.filter(v => v.level === 1) };
         } else if (currentUser.current_level === 2) {
-            return allVideos;
+            return { type: 'videos', videos: allVideos };
+        } else if (currentUser.current_level === 3) {
+            return { type: 'videos', videos: allVideos };
         }
-        return [];
+        return { type: 'empty' };
     }
 
-    function shouldShowTest() {
-        if (currentUser.current_level === 1 && !currentUser.level1_test_passed) {
-            return { show: true, level: 1 };
-        } else if (currentUser.current_level === 2 && !currentUser.level2_test_passed) {
-            return { show: true, level: 2 };
+    function renderLevel3(showTestButton = false, testPassed = false) {
+        const contentArea = document.getElementById('contentArea');
+        const savedNotes = currentUser.level3_notes || '';
+        const notesArray = savedNotes ? savedNotes.split('|') : ['', '', '', '', '', '', '', '', '', ''];
+        
+        contentArea.innerHTML = `
+            <div class="notes-container">
+                <h2>📝 Анализ диалогов</h2>
+                <p>Прочитайте диалоги и выпишите 10 фишек, моментов которые вам запомнились и которые вы будете использовать в своих диалогах</p>
+                <div class="notes-list" id="notesList">
+                    ${[1,2,3,4,5,6,7,8,9,10].map(i => `
+                        <div class="note-item">
+                            <div class="note-number">${i}</div>
+                            <input type="text" id="note${i}" placeholder="Введите фишку ${i}" value="${notesArray[i-1] || ''}">
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="submit-notes-btn" id="submitNotesBtn">Сохранить и подтвердить</button>
+            </div>
+            ${showTestButton && !testPassed ? `
+                <div class="test-btn-container">
+                    <button class="test-btn" id="openFinalTestBtn">📝 Финальный тест</button>
+                </div>
+            ` : (testPassed ? `
+                <div class="test-btn-container">
+                    <button class="test-btn disabled" disabled style="background:#333;color:#666;">✅ Финальный тест пройден</button>
+                </div>
+            ` : '')}
+        `;
+        
+        const submitBtn = document.getElementById('submitNotesBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', async () => {
+                const notes = [];
+                for (let i = 1; i <= 10; i++) {
+                    const input = document.getElementById(`note${i}`);
+                    notes.push(input.value || '');
+                }
+                const notesString = notes.join('|');
+                await updateLevel3Notes(notesString);
+                alert('Заметки сохранены! Теперь доступен финальный тест.');
+                renderLevel3(true, false);
+            });
         }
-        return { show: false, level: null };
+        
+        const finalTestBtn = document.getElementById('openFinalTestBtn');
+        if (finalTestBtn) {
+            finalTestBtn.addEventListener('click', () => openTestModal(3));
+        }
     }
 
-    function getTestQuestions(level) {
-        return level === 1 ? level1Questions : level2Questions;
-    }
-
-    function renderVideos(videos) {
+    function renderVideos(videos, testLevel = null, testPassed = false) {
         const contentArea = document.getElementById('contentArea');
         
         if (!videos || videos.length === 0) {
@@ -710,14 +882,10 @@
             return;
         }
 
-        const testInfo = shouldShowTest();
-        const level1Passed = currentUser.level1_test_passed;
-        const level2Passed = currentUser.level2_test_passed;
-        
         let notificationText = '';
-        if (currentUser.current_level === 1 && level1Passed) {
+        if (currentUser.current_level === 1 && currentUser.level1_test_passed) {
             notificationText = 'Первый этап пройден! Для перехода на второй этап обратитесь к тимлидеру.';
-        } else if (currentUser.current_level === 2 && level2Passed) {
+        } else if (currentUser.current_level === 2 && currentUser.level2_test_passed) {
             notificationText = 'Второй этап пройден! Для перехода на третий этап обратитесь к тимлидеру.';
         }
 
@@ -741,11 +909,11 @@
                         </div>
                     `).join('')}
                 </div>
-                ${testInfo.show ? `
+                ${testLevel && !testPassed ? `
                     <div class="test-btn-container">
                         <button class="test-btn" id="openTestBtn">📝 Пройти тест</button>
                     </div>
-                ` : (testInfo.level === null ? `
+                ` : (testLevel && testPassed ? `
                     <div class="test-btn-container">
                         <button class="test-btn disabled" disabled style="background:#333;color:#666;">✅ Тест пройден</button>
                     </div>
@@ -757,8 +925,8 @@
             setupVideoHandlers(video);
         });
         
-        if (testInfo.show) {
-            document.getElementById('openTestBtn')?.addEventListener('click', () => openTestModal(testInfo.level));
+        if (testLevel && !testPassed) {
+            document.getElementById('openTestBtn')?.addEventListener('click', () => openTestModal(testLevel));
         }
     }
 
@@ -766,20 +934,35 @@
         if (!currentUser) return;
         
         if (currentPage === 'main') {
-            const videos = getMainPageVideos();
-            renderVideos(videos);
+            const content = getMainPageContent();
+            if (content.type === 'videos') {
+                renderVideos(content.videos, content.testLevel, content.testPassed);
+            } else if (content.type === 'level3') {
+                const hasNotes = currentUser.level3_notes && currentUser.level3_notes.split('|').some(n => n.trim());
+                renderLevel3(hasNotes, content.testPassed);
+            }
         } else if (currentPage === 'materials') {
-            const videos = getMaterialsVideos();
-            renderVideos(videos);
+            const content = getMaterialsContent();
+            if (content.type === 'videos') {
+                renderVideos(content.videos);
+            }
         }
     }
 
     function openTestModal(level) {
         currentTestLevel = level;
-        const testTitle = level === 1 ? '📝 Тест: Сфера инвестиций и фильтрация трафика' : '📝 Тест: Вбросы и Предлога';
-        const testDesc = level === 1 
-            ? 'В тесте будет 5 вопросов по темам: Сфера инвестиций и Фильтрация трафика'
-            : 'В тесте будет 5 вопросов по темам: Вбросы и Предлога';
+        let testTitle, testDesc;
+        
+        if (level === 1) {
+            testTitle = '📝 Тест: Сфера инвестиций и фильтрация трафика';
+            testDesc = 'В тесте будет 5 вопросов по темам: Сфера инвестиций и Фильтрация трафика';
+        } else if (level === 2) {
+            testTitle = '📝 Тест: Вбросы и Предлога';
+            testDesc = 'В тесте будет 5 вопросов по темам: Вбросы и Предлога';
+        } else {
+            testTitle = '📝 Финальный тест';
+            testDesc = 'В тесте будет 13 вопросов по всем темам обучения';
+        }
         
         document.getElementById('testTitle').textContent = testTitle;
         document.getElementById('testDescription').textContent = testDesc;
@@ -796,6 +979,12 @@
         document.getElementById('testIntro').style.display = 'none';
         document.getElementById('testQuestionsArea').style.display = 'block';
         showQuestion();
+    }
+
+    function getTestQuestions(level) {
+        if (level === 1) return level1Questions;
+        if (level === 2) return level2Questions;
+        return level3Questions;
     }
 
     function showQuestion() {
@@ -951,7 +1140,11 @@
                 body: JSON.stringify(result)
             });
             
-            await updateTestPassed(currentTestLevel);
+            if (currentTestLevel === 1 || currentTestLevel === 2) {
+                await updateTestPassed(currentTestLevel);
+            } else if (currentTestLevel === 3) {
+                await updateLevel3TestPassed();
+            }
             
         } catch (error) {
             console.error('Ошибка сохранения:', error);
@@ -959,7 +1152,9 @@
         
         const nextMessage = currentTestLevel === 1 
             ? 'Для перехода на уровень 2 обратитесь к тимлидеру'
-            : 'Для перехода на уровень 3 обратитесь к тимлидеру';
+            : (currentTestLevel === 2 
+                ? 'Для перехода на уровень 3 обратитесь к тимлидеру'
+                : 'Поздравляем! Вы прошли полное обучение!');
         
         document.getElementById('nextStepMessage').textContent = nextMessage;
         document.getElementById('testQuestionsArea').style.display = 'none';
