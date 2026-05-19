@@ -120,18 +120,20 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
         }
 
         .profile-left {
             display: flex;
             align-items: center;
             gap: 16px;
+            flex-wrap: wrap;
         }
 
         .nav-buttons {
             display: flex;
             gap: 12px;
-            margin-left: 32px;
         }
 
         .nav-btn {
@@ -230,15 +232,16 @@
         }
 
         .video-title {
-            padding: 16px 20px 8px;
-            font-size: 18px;
-            font-weight: 600;
+            padding: 16px 20px 4px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
         }
 
-        .video-description {
+        .video-subtitle {
             padding: 0 20px 20px;
             font-size: 14px;
-            color: #8a8a8a;
+            color: #888888;
         }
 
         @media (max-width: 768px) {
@@ -248,8 +251,9 @@
             .header {
                 padding: 12px 16px;
             }
-            .nav-buttons {
-                margin-left: 0;
+            .profile-left {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
@@ -305,17 +309,13 @@
     let currentUser = null;
     let currentPage = 'main';
 
-    // ВСЕ ВИДЕО
-    const allVideos = {
-        1: [
-            { file: 'sfeeeeeeeera.mp4', title: 'Сфера инвестиций', description: 'Базовые принципы и стратегии инвестирования' },
-            { file: 'filtrasia.mp4', title: 'Фильтрация трафика', description: 'Как правильно фильтровать и анализировать трафик' }
-        ],
-        2: [
-            { file: 'Vbros.mp4', title: 'Вброс', description: 'Анализ рыночных вбросов' },
-            { file: 'predloga.mp4', title: 'Предлога', description: 'Работа с предложениями' }
-        ]
-    };
+    // ВСЕ ВИДЕО (уроки 1-4)
+    const allVideos = [
+        { id: 1, level: 1, file: 'sfeeeeeeeera.mp4', title: 'Урок 1', subtitle: 'Сфера инвестиций' },
+        { id: 2, level: 1, file: 'filtrasia.mp4', title: 'Урок 2', subtitle: 'Фильтрация трафика' },
+        { id: 3, level: 2, file: 'Vbros.mp4', title: 'Урок 3', subtitle: 'Вброс' },
+        { id: 4, level: 2, file: 'predloga.mp4', title: 'Урок 4', subtitle: 'Предлога' }
+    ];
 
     async function checkUserLogin(login, password) {
         try {
@@ -340,8 +340,24 @@
         }
     }
 
-    function getVideosByLevel(level) {
-        return allVideos[level] || [];
+    // Видео для главной страницы (по текущему уровню)
+    function getMainPageVideos() {
+        if (currentUser.current_level === 1) {
+            return allVideos.filter(v => v.level === 1);
+        } else if (currentUser.current_level === 2) {
+            return allVideos.filter(v => v.level === 2);
+        }
+        return [];
+    }
+
+    // Видео для материалов (все разблокированные уровни)
+    function getMaterialsVideos() {
+        if (currentUser.current_level === 1) {
+            return allVideos.filter(v => v.level === 1);
+        } else if (currentUser.current_level === 2) {
+            return allVideos; // Все 4 видео
+        }
+        return [];
     }
 
     function renderVideos(videos) {
@@ -362,7 +378,7 @@
                                 <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/${video.file}" type="video/mp4">
                             </video>
                             <div class="video-title">${video.title}</div>
-                            <div class="video-description">${video.description}</div>
+                            <div class="video-subtitle">${video.subtitle}</div>
                         </div>
                     `).join('')}
                 </div>
@@ -374,10 +390,10 @@
         if (!currentUser) return;
         
         if (currentPage === 'main') {
-            const videos = getVideosByLevel(currentUser.current_level);
+            const videos = getMainPageVideos();
             renderVideos(videos);
         } else if (currentPage === 'materials') {
-            const videos = getVideosByLevel(currentUser.current_level);
+            const videos = getMaterialsVideos();
             renderVideos(videos);
         }
     }
@@ -388,7 +404,6 @@
         if (result.success) {
             currentUser = result.user;
             
-            // Сохраняем в localStorage
             localStorage.setItem('userId', currentUser.id);
             localStorage.setItem('userLogin', currentUser.login);
             
