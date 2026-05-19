@@ -246,10 +246,38 @@
             overflow: hidden;
         }
 
+        .video-container {
+            position: relative;
+        }
+
         video {
             width: 100%;
             aspect-ratio: 16 / 9;
             background: #000;
+        }
+
+        .video-controls {
+            display: flex;
+            gap: 12px;
+            padding: 12px 20px;
+            background: #0f0f0f;
+            border-top: 1px solid #2a2a2a;
+        }
+
+        .video-controls button {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .video-controls button:hover {
+            background: #2a2a2a;
+            border-color: #ffffff;
         }
 
         .video-title {
@@ -552,6 +580,7 @@
     let timeLeft = 40;
     let currentSelectedAnswer = null;
     let currentTestLevel = 1;
+    let currentVideoElement = null;
 
     // Вопросы теста 1 уровня
     const level1Questions = [
@@ -617,6 +646,25 @@
         { id: 3, level: 2, file: 'Vbros.mp4', title: 'Урок 3', subtitle: 'Вброс' },
         { id: 4, level: 2, file: 'predloga.mp4', title: 'Урок 4', subtitle: 'Предлога' }
     ];
+
+    // Функция для управления видео (останавливает все кроме текущего)
+    function setupVideoHandlers(videoElement) {
+        videoElement.addEventListener('play', () => {
+            // Останавливаем все другие видео
+            document.querySelectorAll('video').forEach(video => {
+                if (video !== videoElement && !video.paused) {
+                    video.pause();
+                }
+            });
+        });
+    }
+
+    // Функция для перемотки видео
+    function seekVideo(videoElement, seconds) {
+        if (videoElement) {
+            videoElement.currentTime += seconds;
+        }
+    }
 
     async function checkUserLogin(login, password) {
         try {
@@ -725,9 +773,15 @@
                 <div class="videos-grid">
                     ${videos.map(video => `
                         <div class="video-card">
-                            <video controls>
-                                <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/${video.file}" type="video/mp4">
-                            </video>
+                            <div class="video-container">
+                                <video id="video-${video.id}" controls preload="metadata">
+                                    <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/${video.file}" type="video/mp4">
+                                </video>
+                                <div class="video-controls">
+                                    <button class="seek-back-10" data-video-id="${video.id}">⏪ -10 сек</button>
+                                    <button class="seek-forward-10" data-video-id="${video.id}">+10 сек ⏩</button>
+                                </div>
+                            </div>
                             <div class="video-title">${video.title}</div>
                             <div class="video-subtitle">${video.subtitle}</div>
                         </div>
@@ -744,6 +798,32 @@
                 ` : '')}
             </div>
         `;
+        
+        // Назначаем обработчики для видео
+        document.querySelectorAll('video').forEach(video => {
+            setupVideoHandlers(video);
+        });
+        
+        // Назначаем обработчики для кнопок перемотки
+        document.querySelectorAll('.seek-back-10').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const videoId = btn.dataset.videoId;
+                const video = document.getElementById(`video-${videoId}`);
+                if (video) {
+                    video.currentTime = Math.max(0, video.currentTime - 10);
+                }
+            });
+        });
+        
+        document.querySelectorAll('.seek-forward-10').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const videoId = btn.dataset.videoId;
+                const video = document.getElementById(`video-${videoId}`);
+                if (video) {
+                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                }
+            });
+        });
         
         if (testInfo.show) {
             document.getElementById('openTestBtn')?.addEventListener('click', () => openTestModal(testInfo.level));
@@ -765,10 +845,10 @@
     function openTestModal(level) {
         currentTestLevel = level;
         const questions = getTestQuestions(level);
-        const testTitle = level === 1 ? '📝 Тест: Сфера инвестиций и фильтрация трафика' : '📝 Тест: Вбросы и работа с клиентами';
+        const testTitle = level === 1 ? '📝 Тест: Сфера инвестиций и фильтрация трафика' : '📝 Тест: Вбросы и Предлога';
         const testDesc = level === 1 
             ? 'В тесте будет 5 вопросов по темам: Сфера инвестиций и Фильтрация трафика'
-            : 'В тесте будет 5 вопросов по темам: Индикаторные вбросы и работа с клиентами';
+            : 'В тесте будет 5 вопросов по темам: Вбросы и Предлога';
         
         document.getElementById('testTitle').textContent = testTitle;
         document.getElementById('testDescription').textContent = testDesc;
