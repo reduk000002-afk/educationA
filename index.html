@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Обучение | Инвестиции</title>
+    <link rel="icon" type="image/png" href="aurum.png">
     <style>
         * {
             margin: 0;
@@ -533,6 +534,13 @@
             cursor: not-allowed;
         }
 
+        .recommend-text {
+            text-align: center;
+            margin-top: 12px;
+            color: #888;
+            font-size: 13px;
+        }
+
         @media (max-width: 768px) {
             .videos-grid {
                 grid-template-columns: 1fr;
@@ -828,15 +836,24 @@
         
         // Если заметки уже сохранены - показываем только кнопку теста
         if (savedNotes && savedNotes.split('|').some(n => n.trim())) {
-            contentArea.innerHTML = `
-                <div class="test-btn-container">
-                    <button class="test-btn" id="openFinalTestBtn">📝 Пройти финальный тест</button>
-                    <p style="text-align: center; margin-top: 12px; color: #888; font-size: 13px;">⚠️ Рекомендуется повторить пройденный материал</p>
-                </div>
-            `;
-            const finalTestBtn = document.getElementById('openFinalTestBtn');
-            if (finalTestBtn) {
-                finalTestBtn.addEventListener('click', () => openTestModal(3));
+            // Если тест уже пройден - показываем кнопку "Тест пройден"
+            if (testPassed) {
+                contentArea.innerHTML = `
+                    <div class="test-btn-container">
+                        <button class="test-btn disabled" disabled style="background:#333;color:#666;">✅ Финальный тест пройден</button>
+                    </div>
+                `;
+            } else {
+                contentArea.innerHTML = `
+                    <div class="test-btn-container">
+                        <button class="test-btn" id="openFinalTestBtn">📝 Пройти финальный тест</button>
+                        <div class="recommend-text">Рекомендуется повторить пройденный материал</div>
+                    </div>
+                `;
+                const finalTestBtn = document.getElementById('openFinalTestBtn');
+                if (finalTestBtn) {
+                    finalTestBtn.addEventListener('click', () => openTestModal(3));
+                }
             }
             return;
         }
@@ -861,7 +878,6 @@
         const submitBtn = document.getElementById('submitNotesBtn');
         if (submitBtn) {
             submitBtn.addEventListener('click', async () => {
-                // Проверяем заполнены ли все поля
                 let allFilled = true;
                 const notes = [];
                 for (let i = 1; i <= 10; i++) {
@@ -921,11 +937,11 @@
                         </div>
                     `).join('')}
                 </div>
-                ${testLevel && !testPassed ? `
+                ${testLevel !== null && !testPassed ? `
                     <div class="test-btn-container">
                         <button class="test-btn" id="openTestBtn">📝 Пройти тест</button>
                     </div>
-                ` : (testLevel && testPassed ? `
+                ` : (testLevel !== null && testPassed ? `
                     <div class="test-btn-container">
                         <button class="test-btn disabled" disabled style="background:#333;color:#666;">✅ Тест пройден</button>
                     </div>
@@ -937,7 +953,7 @@
             setupVideoHandlers(video);
         });
         
-        if (testLevel && !testPassed) {
+        if (testLevel !== null && !testPassed) {
             document.getElementById('openTestBtn')?.addEventListener('click', () => openTestModal(testLevel));
         }
     }
@@ -955,7 +971,7 @@
         } else if (currentPage === 'materials') {
             const content = getMaterialsContent();
             if (content.type === 'videos') {
-                renderVideos(content.videos);
+                renderVideos(content.videos, null, false);
             }
         }
     }
@@ -965,13 +981,13 @@
         let testTitle, testDesc;
         
         if (level === 1) {
-            testTitle = '📝 Тест: Сфера инвестиций и фильтрация трафика';
+            testTitle = 'Тест: Сфера инвестиций и фильтрация трафика';
             testDesc = 'В тесте будет 5 вопросов по темам: Сфера инвестиций и Фильтрация трафика';
         } else if (level === 2) {
-            testTitle = '📝 Тест: Вбросы и Предлога';
+            testTitle = 'Тест: Вбросы и Предлога';
             testDesc = 'В тесте будет 5 вопросов по темам: Вбросы и Предлога';
         } else {
-            testTitle = '📝 Финальный тест';
+            testTitle = 'Финальный тест';
             testDesc = 'В тесте будет 13 вопросов по всем темам обучения';
         }
         
