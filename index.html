@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Обучение </title>
+    <title>Обучение | Инвестиции</title>
     <link rel="icon" type="image/png" href="aurum.png">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
         }
 
         body {
@@ -247,11 +248,39 @@
             overflow: hidden;
         }
 
-        video {
+        .protected-video {
+            position: relative;
+            background: #000;
+            transition: filter 0.3s;
+        }
+
+        .protected-video canvas {
             width: 100%;
             aspect-ratio: 16 / 9;
-            background: #000;
             display: block;
+            cursor: pointer;
+        }
+
+        .video-play-btn {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s;
+        }
+
+        .video-play-btn:hover {
+            background: #e0e0e0;
+            transform: translateX(-50%) scale(1.02);
         }
 
         .video-title {
@@ -528,12 +557,6 @@
             margin-top: 16px;
         }
 
-        .submit-notes-btn:disabled {
-            background: #333;
-            color: #666;
-            cursor: not-allowed;
-        }
-
         .recommend-text {
             text-align: center;
             margin-top: 12px;
@@ -550,6 +573,10 @@
             }
             .timer {
                 font-size: 20px;
+            }
+            .video-play-btn {
+                padding: 6px 18px;
+                font-size: 12px;
             }
         }
     </style>
@@ -627,6 +654,62 @@
 </div>
 
 <script>
+    // БЛОКИРОВКА DEVTOOLS И ЗАЩИТА
+    (function() {
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            return false;
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+                (e.ctrlKey && e.key === 'u') ||
+                (e.ctrlKey && e.key === 's')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        document.addEventListener('selectstart', (e) => {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        let devtoolsOpen = false;
+        const devtoolsThreshold = 160;
+        
+        setInterval(() => {
+            const widthDiff = window.outerWidth - window.innerWidth > devtoolsThreshold;
+            const heightDiff = window.outerHeight - window.innerHeight > devtoolsThreshold;
+            
+            if (widthDiff || heightDiff) {
+                if (!devtoolsOpen) {
+                    devtoolsOpen = true;
+                    document.querySelectorAll('.protected-video').forEach(el => {
+                        if (el) {
+                            el.style.filter = 'blur(10px)';
+                            el.style.pointerEvents = 'none';
+                        }
+                    });
+                }
+            } else {
+                if (devtoolsOpen) {
+                    devtoolsOpen = false;
+                    document.querySelectorAll('.protected-video').forEach(el => {
+                        if (el) {
+                            el.style.filter = 'none';
+                            el.style.pointerEvents = 'auto';
+                        }
+                    });
+                }
+            }
+        }, 1000);
+    })();
+
     const SUPABASE_URL = 'https://hmlcwfrbymdnofhunibd.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_25VHjp6VP8_OcNsPuBBpqg_0hua7oPG';
     
@@ -638,6 +721,7 @@
     let timeLeft = 40;
     let currentSelectedAnswer = null;
     let currentTestLevel = 1;
+    let activeVideos = [];
 
     const level1Questions = [
         {
@@ -718,14 +802,109 @@
         { id: 4, level: 2, file: 'predloga.mp4', title: 'Урок 4', subtitle: 'Предлога' }
     ];
 
-    function setupVideoHandlers(videoElement) {
-        videoElement.addEventListener('play', () => {
-            document.querySelectorAll('video').forEach(video => {
-                if (video !== videoElement && !video.paused) {
-                    video.pause();
+    function initProtectedVideo(videoId, videoFile) {
+        const canvas = document.getElementById(`video-canvas-${videoId}`);
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        const playBtn = document.querySelector(`.video-play-btn[data-video-id="${videoId}"]`);
+        
+        let video = null;
+        let animationId = null;
+        
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        canvas.addEventListener('dragstart', (e) => e.preventDefault());
+        
+        function drawVideo() {
+            if (!video || video.paused || video.ended) {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                return;
+            }
+            
+            if (canvas && ctx && video.videoWidth > 0) {
+                try {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    animationId = requestAnimationFrame(drawVideo);
+                } catch (e) {}
+            } else if (video && !video.paused) {
+                animationId = requestAnimationFrame(drawVideo);
+            }
+        }
+        
+        function stopOthers() {
+            activeVideos.forEach(v => {
+                if (v.video && v.video !== video && !v.video.paused) {
+                    v.video.pause();
+                    if (v.animationId) cancelAnimationFrame(v.animationId);
                 }
             });
-        });
+        }
+        
+        function startPlayback() {
+            if (video) {
+                if (video.paused) {
+                    stopOthers();
+                    video.play();
+                }
+                return;
+            }
+            
+            const videoUrl = `https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/${videoFile}`;
+            video = document.createElement('video');
+            video.src = videoUrl;
+            video.crossOrigin = 'Anonymous';
+            video.preload = 'metadata';
+            video.controls = false;
+            video.disableRemotePlayback = true;
+            
+            video.addEventListener('contextmenu', (e) => e.preventDefault());
+            
+            video.addEventListener('loadedmetadata', () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+            });
+            
+            video.addEventListener('play', () => {
+                drawVideo();
+                stopOthers();
+                const existingIndex = activeVideos.findIndex(v => v.id === videoId);
+                if (existingIndex !== -1) {
+                    activeVideos[existingIndex].video = video;
+                    activeVideos[existingIndex].animationId = animationId;
+                } else {
+                    activeVideos.push({ id: videoId, video: video, animationId: animationId });
+                }
+            });
+            
+            video.addEventListener('pause', () => {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            });
+            
+            video.addEventListener('ended', () => {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            });
+            
+            video.play().catch(e => console.log('Play error:', e));
+        }
+        
+        if (playBtn) {
+            const newBtn = playBtn.cloneNode(true);
+            playBtn.parentNode.replaceChild(newBtn, playBtn);
+            newBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                startPlayback();
+            });
+        }
     }
 
     async function checkUserLogin(login, password) {
@@ -834,9 +1013,8 @@
         const savedNotes = currentUser.level3_notes || '';
         const notesArray = savedNotes ? savedNotes.split('|') : ['', '', '', '', '', '', '', '', '', ''];
         
-        // Если заметки уже сохранены - показываем только кнопку теста
+        // Если заметки уже сохранены
         if (savedNotes && savedNotes.split('|').some(n => n.trim())) {
-            // Если тест уже пройден - показываем кнопку "Тест пройден"
             if (testPassed) {
                 contentArea.innerHTML = `
                     <div class="test-btn-container">
@@ -858,7 +1036,7 @@
             return;
         }
         
-        // Показываем форму для заполнения заметок
+        // Показываем форму для заполнения заметок (без подтверждений)
         contentArea.innerHTML = `
             <div class="notes-container">
                 <h2>📝 Анализ диалогов</h2>
@@ -887,22 +1065,23 @@
                     if (!value) allFilled = false;
                 }
                 
+                // Если не все заполнены - показываем сообщение
                 if (!allFilled) {
                     alert('Пожалуйста, заполните все 10 пунктов перед сохранением.');
                     return;
                 }
                 
-                if (confirm('Вы уверены, что хотите сохранить заметки? После сохранения изменить их будет нельзя.')) {
-                    const notesString = notes.join('|');
-                    await updateLevel3Notes(notesString);
-                    alert('Заметки сохранены! Теперь доступен финальный тест.');
-                    renderLevel3(true, false);
-                }
+                // Сохраняем заметки без дополнительных подтверждений
+                const notesString = notes.join('|');
+                await updateLevel3Notes(notesString);
+                
+                // Перерисовываем страницу, показываем кнопку теста
+                renderLevel3(true, false);
             });
         }
     }
 
-    function renderVideos(videos, testLevel = null, testPassed = false) {
+    function renderProtectedVideos(videos, testLevel = null, testPassed = false) {
         const contentArea = document.getElementById('contentArea');
         
         if (!videos || videos.length === 0) {
@@ -927,11 +1106,14 @@
             <div class="videos-section">
                 <h1>📹 Обучающие видео</h1>
                 <div class="videos-grid">
-                    ${videos.map(video => `
+                    ${videos.map((video, index) => `
                         <div class="video-card">
-                            <video controls preload="metadata">
-                                <source src="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/${video.file}" type="video/mp4">
-                            </video>
+                            <div class="protected-video" data-video-url="https://hmlcwfrbymdnofhunibd.supabase.co/storage/v1/object/public/videos1/${video.file}" data-video-id="${video.id}">
+                                <canvas id="video-canvas-${video.id}" width="800" height="450" style="width:100%; aspect-ratio:16/9; background:#000; cursor:pointer;"></canvas>
+                                <div style="position:relative; margin-top:-40px; padding:8px; text-align:center;">
+                                    <button class="video-play-btn" data-video-id="${video.id}" style="background:#fff; color:#000; border:none; padding:8px 16px; border-radius:20px; cursor:pointer;">▶ Play</button>
+                                </div>
+                            </div>
                             <div class="video-title">${video.title}</div>
                             <div class="video-subtitle">${video.subtitle}</div>
                         </div>
@@ -949,8 +1131,8 @@
             </div>
         `;
         
-        document.querySelectorAll('video').forEach(video => {
-            setupVideoHandlers(video);
+        videos.forEach(video => {
+            initProtectedVideo(video.id, video.file);
         });
         
         if (testLevel !== null && !testPassed) {
@@ -964,14 +1146,14 @@
         if (currentPage === 'main') {
             const content = getMainPageContent();
             if (content.type === 'videos') {
-                renderVideos(content.videos, content.testLevel, content.testPassed);
+                renderProtectedVideos(content.videos, content.testLevel, content.testPassed);
             } else if (content.type === 'level3') {
                 renderLevel3(true, content.testPassed);
             }
         } else if (currentPage === 'materials') {
             const content = getMaterialsContent();
             if (content.type === 'videos') {
-                renderVideos(content.videos, null, false);
+                renderProtectedVideos(content.videos);
             }
         }
     }
